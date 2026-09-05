@@ -9,11 +9,11 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
 body{background:#f4f7fb;color:#172033}
 .app{max-width:430px;min-height:100vh;margin:auto;background:#fff}
-.top{background:linear-gradient(135deg,#0757d9,#1685ff);color:white;padding:28px 20px 60px;border-radius:0 0 28px 28px}
+.top{background:linear-gradient(135deg,#0757d9,#1685ff);color:#fff;padding:28px 20px 60px;border-radius:0 0 28px 28px}
 .brand{font-size:29px;font-weight:800}.sub{margin-top:5px;opacity:.9}
 .auth,.section{padding:24px 18px}
 .auth h2{margin-bottom:8px}.muted{color:#777}
-input,select{width:100%;padding:14px;margin:7px 0;border:1px solid #d9e0ea;border-radius:12px;font-size:15px;background:#fff}
+input{width:100%;padding:14px;margin:7px 0;border:1px solid #d9e0ea;border-radius:12px;font-size:15px;background:#fff}
 button{width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
 .primary{background:#0866ed;color:#fff;margin-top:8px}.secondary{background:#eaf2ff;color:#0866ed}
 .danger{background:#ffecec;color:#d93025}
@@ -25,12 +25,15 @@ button{width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-w
 .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
 .action{background:#f5f8fc;border-radius:15px;padding:14px 5px;text-align:center;font-weight:700;font-size:13px;cursor:pointer}
 .icon{font-size:24px;margin-bottom:6px}
-.tx{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid #eee}
+.tx{display:flex;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid #eee}
 .green{color:#07934c;font-weight:700}.red{color:#d93025;font-weight:700}
 .badge{display:inline-block;padding:6px 10px;border-radius:20px;background:#fff4d6;color:#9a6b00;font-size:12px;font-weight:700}
 .form-card{margin:18px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 5px 20px #00000010}
 .back{background:#f0f3f8;color:#333;margin-bottom:12px}
 .note{font-size:12px;color:#777;line-height:1.5;margin-top:10px}
+.admin-card{margin:18px;background:#f8fbff;border:1px solid #dce9ff;border-radius:18px;padding:18px}
+.user-row{padding:14px 0;border-bottom:1px solid #e7edf5}
+.small-btn{padding:10px;font-size:14px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -78,9 +81,13 @@ button{width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-w
 
   <div class="section">
     <h3>Account</h3>
-    <div class="tx"><div>KYC Status<br><small class="muted">Identity verification</small></div><span class="badge">Pending</span></div>
+    <div class="tx">
+      <div>KYC Status<br><small class="muted">Identity verification</small></div>
+      <span id="kycBadge" class="badge">Pending</span>
+    </div>
   </div>
 
+  <button class="secondary" style="margin:0 18px 12px;width:calc(100% - 36px)" onclick="openScreen('adminPage')">⚙️ Admin Demo</button>
   <button class="danger" style="margin:0 18px 25px;width:calc(100% - 36px)" onclick="logout()">Logout</button>
 </div>
 
@@ -94,10 +101,10 @@ button{width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-w
     <input id="kycName" placeholder="Full Name">
     <input id="dob" type="date">
     <input id="pan" placeholder="PAN Number">
-    <input id="upi" placeholder="UPI ID (example@upi)">
+    <input id="upi" placeholder="UPI ID">
     <button class="primary" onclick="submitKyc()">Submit KYC</button>
     <div class="msg" id="kycMsg"></div>
-    <p class="note">For the real-money version, identity verification must be handled through a compliant KYC provider. Do not upload Aadhaar/PAN documents to an unsecured public database.</p>
+    <p class="note">Demo only. For a real service, identity verification must use an authorised/compliant KYC provider. Do not put Aadhaar/PAN documents into an unsecured public database.</p>
   </div>
 </div>
 
@@ -112,7 +119,7 @@ button{width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-w
     <input id="redeemUpi" placeholder="UPI ID">
     <button class="primary" onclick="requestRedeem()">Submit Redeem Request</button>
     <div class="msg" id="redeemMsg"></div>
-    <p class="note">This first version creates a request only. Actual UPI payout will be connected later through an authorised payment provider.</p>
+    <p class="note">Demo request only. No real UPI payout is made by this prototype.</p>
   </div>
 </div>
 
@@ -121,37 +128,60 @@ button{width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-w
   <div class="top"><div class="brand">BizPay</div><div class="sub">Transaction History</div></div>
   <div class="section">
     <button class="back" onclick="openScreen('homePage')">← Back</button>
-    <div id="historyList">
-      <div class="tx"><div>Account Created<br><small class="muted">Welcome to BizPay</small></div><span class="green">₹0</span></div>
-    </div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<!-- ADMIN DEMO -->
+<div id="adminPage" class="hidden">
+  <div class="top"><div class="brand">BizPay Admin</div><div class="sub">Demo Wallet Management</div></div>
+
+  <div class="admin-card">
+    <button class="back" onclick="openScreen('homePage')">← Back</button>
+    <h2>Admin Demo</h2>
+    <p class="muted" style="margin:7px 0 15px">Add demo wallet credit to the current test user.</p>
+
+    <input id="adminAmount" type="number" min="1" step="1" placeholder="Amount to credit">
+    <input id="adminNote" placeholder="Reason / note (optional)">
+    <button class="primary" onclick="addDemoCredit()">➕ Add Demo Credit</button>
+    <div class="msg" id="adminMsg"></div>
+
+    <p class="note"><b>Demo only:</b> this changes browser localStorage. It does not move real money and is not a real admin/payment system.</p>
+  </div>
+
+  <div class="admin-card">
+    <h3>Current Test User</h3>
+    <div id="adminUserInfo" class="user-row"></div>
+    <div id="adminStats"></div>
   </div>
 </div>
 
 </div>
 
 <script>
-/* ===== OPTIONAL SUPABASE CONNECTION =====
-   Later replace these two placeholders with your
-   project URL + publishable/anon key.
-   NEVER use a service_role/secret key here.
+/*
+  BIZPAY DEMO
+  This version uses localStorage only.
+  It is NOT a real wallet, KYC system, or UPI payout system.
+  For production, use secure authentication, a server/database,
+  an authorised payment provider and compliant KYC flow.
 */
-const SUPABASE_URL="YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_KEY="YOUR_SUPABASE_PUBLISHABLE_KEY";
 
-/* Local demo storage: lets the UI work before database setup. */
 let user=JSON.parse(localStorage.getItem("bizpay_user")||"null");
 let balance=Number(localStorage.getItem("bizpay_balance")||"0");
 let history=JSON.parse(localStorage.getItem("bizpay_history")||"[]");
+let kycStatus=localStorage.getItem("bizpay_kyc_status")||"Pending";
 
 function save(){
   localStorage.setItem("bizpay_user",JSON.stringify(user));
   localStorage.setItem("bizpay_balance",String(balance));
   localStorage.setItem("bizpay_history",JSON.stringify(history));
+  localStorage.setItem("bizpay_kyc_status",kycStatus);
 }
 
 function toggleAuth(){
-  const signup=document.getElementById("name").classList.toggle("hidden");
-  const isSignup=!signup;
+  const hidden=document.getElementById("name").classList.toggle("hidden");
+  const isSignup=!hidden;
   document.getElementById("authTitle").textContent=isSignup?"Create Account":"Welcome Back";
   document.getElementById("authBtn").textContent=isSignup?"Sign Up":"Login";
   document.getElementById("switchBtn").textContent=isSignup?"Already have an account? Login":"Don't have an account? Sign Up";
@@ -166,13 +196,26 @@ function authAction(){
   const msg=document.getElementById("authMsg");
 
   if(!email||!password||(signup&&!name)){
-    msg.style.color="#d93025";msg.textContent="Saari required details bharo.";return;
-  }
-  if(password.length<6){
-    msg.style.color="#d93025";msg.textContent="Password kam se kam 6 characters ka rakho.";return;
+    msg.style.color="#d93025";
+    msg.textContent="Saari required details bharo.";
+    return;
   }
 
-  user={name:signup?name:(user?.name||email.split("@")[0]),email};
+  if(password.length<6){
+    msg.style.color="#d93025";
+    msg.textContent="Password kam se kam 6 characters ka rakho.";
+    return;
+  }
+
+  if(signup){
+    user={name,email};
+    balance=0;
+    history=[{title:"Account Created",detail:"Welcome to BizPay",status:"Success",amount:0}];
+    kycStatus="Pending";
+  }else{
+    user={name:user?.name||email.split("@")[0],email};
+  }
+
   save();
   msg.style.color="#07934c";
   msg.textContent=signup?"Account created!":"Login successful!";
@@ -180,7 +223,9 @@ function authAction(){
 }
 
 function openScreen(id){
-  ["authPage","homePage","kycPage","redeemPage","historyPage"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+  ["authPage","homePage","kycPage","redeemPage","historyPage","adminPage"]
+    .forEach(x=>document.getElementById(x).classList.add("hidden"));
+
   document.getElementById(id).classList.remove("hidden");
   updateUI();
 }
@@ -188,21 +233,70 @@ function openScreen(id){
 function updateUI(){
   document.getElementById("balance").textContent=balance.toFixed(2);
   document.getElementById("redeemBalance").textContent=balance.toFixed(2);
-  if(user)document.getElementById("welcomeName").textContent=user.name;
+
+  if(user){
+    document.getElementById("welcomeName").textContent=user.name;
+    document.getElementById("adminUserInfo").innerHTML=
+      "<b>"+escapeHtml(user.name)+"</b><br><small class='muted'>"+escapeHtml(user.email)+"</small>";
+  }
+
+  document.getElementById("kycBadge").textContent=kycStatus;
+  document.getElementById("kycBadge").style.background=kycStatus==="Submitted"?"#e8f8ef":"#fff4d6";
+  document.getElementById("kycBadge").style.color=kycStatus==="Submitted"?"#087f45":"#9a6b00";
+
+  document.getElementById("adminStats").innerHTML=
+    "<div class='tx'><span>Demo Wallet Balance</span><b>₹"+balance.toFixed(2)+"</b></div>"+
+    "<div class='tx'><span>KYC Status</span><b>"+escapeHtml(kycStatus)+"</b></div>";
+
   renderHistory();
 }
 
 function submitKyc(){
   const name=document.getElementById("kycName").value.trim();
   const dob=document.getElementById("dob").value;
-  const pan=document.getElementById("pan").value.trim().toUpperCase();
+  const pan=document.getElementById("pan").value.trim();
   const upi=document.getElementById("upi").value.trim();
   const msg=document.getElementById("kycMsg");
+
   if(!name||!dob||!pan||!upi){
-    msg.style.color="#d93025";msg.textContent="Sabhi details bharo.";return;
+    msg.style.color="#d93025";
+    msg.textContent="Sabhi details bharo.";
+    return;
   }
+
+  kycStatus="Submitted";
+  save();
+  updateUI();
   msg.style.color="#07934c";
   msg.textContent="KYC request submitted (demo).";
+}
+
+function addDemoCredit(){
+  const amount=Number(document.getElementById("adminAmount").value);
+  const note=document.getElementById("adminNote").value.trim();
+  const msg=document.getElementById("adminMsg");
+
+  if(!amount||amount<=0){
+    msg.style.color="#d93025";
+    msg.textContent="Valid amount enter karo.";
+    return;
+  }
+
+  balance+=amount;
+  history.unshift({
+    title:"Demo Wallet Credit",
+    detail:note||"Added by Admin Demo",
+    status:"Success",
+    amount:amount
+  });
+
+  save();
+  updateUI();
+
+  document.getElementById("adminAmount").value="";
+  document.getElementById("adminNote").value="";
+  msg.style.color="#07934c";
+  msg.textContent="₹"+amount.toFixed(2)+" demo credit added!";
 }
 
 function requestRedeem(){
@@ -211,15 +305,25 @@ function requestRedeem(){
   const msg=document.getElementById("redeemMsg");
 
   if(!amount||amount<=0||!upi){
-    msg.style.color="#d93025";msg.textContent="Amount aur UPI ID bharo.";return;
-  }
-  if(amount>balance){
-    msg.style.color="#d93025";msg.textContent="Insufficient balance.";return;
+    msg.style.color="#d93025";
+    msg.textContent="Amount aur UPI ID bharo.";
+    return;
   }
 
-  /* Demo: reserve/deduct the requested amount and create a pending request. */
+  if(amount>balance){
+    msg.style.color="#d93025";
+    msg.textContent="Insufficient balance.";
+    return;
+  }
+
   balance-=amount;
-  history.unshift({title:"Redeem Request",detail:"UPI: "+upi,status:"Pending",amount:-amount});
+  history.unshift({
+    title:"Redeem Request",
+    detail:"UPI: "+upi+" • Pending",
+    status:"Pending",
+    amount:-amount
+  });
+
   save();
   updateUI();
 
@@ -230,25 +334,43 @@ function requestRedeem(){
 
 function renderHistory(){
   const box=document.getElementById("historyList");
+  if(!box)return;
+
   if(!history.length){
-    box.innerHTML='<p class="muted">No transactions yet.</p>';return;
+    box.innerHTML='<p class="muted">No transactions yet.</p>';
+    return;
   }
+
   box.innerHTML=history.map(t=>{
     const cls=t.amount<0?"red":"green";
     const sign=t.amount<0?"-":"+";
-    return `<div class="tx"><div><b>${escapeHtml(t.title)}</b><br><small class="muted">${escapeHtml(t.detail||t.status||"")}</small></div><span class="${cls}">${sign}₹${Math.abs(t.amount).toFixed(2)}</span></div>`;
+    const amount=t.amount===0?"₹0.00":sign+"₹"+Math.abs(t.amount).toFixed(2);
+
+    return `<div class="tx">
+      <div><b>${escapeHtml(t.title)}</b><br>
+      <small class="muted">${escapeHtml(t.detail||t.status||"")}</small></div>
+      <span class="${cls}">${amount}</span>
+    </div>`;
   }).join("");
 }
 
 function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+  return String(s).replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
 }
 
 function logout(){
-  user=null;save();location.reload();
+  user=null;
+  save();
+  location.reload();
 }
 
-if(user)openScreen("homePage");
+if(user){
+  openScreen("homePage");
+}else{
+  openScreen("authPage");
+}
 </script>
 </body>
 </html>
