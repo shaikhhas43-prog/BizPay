@@ -199,14 +199,14 @@ async function loadKyc(){
     const {data,error}=await db.rpc("bizpay_admin_list_kyc");
     if(error)throw error;
     const rows=data||[];
-    document.getElementById("kycCount").textContent=rows.filter(x=>x.kyc_status==="submitted").length;
+    document.getElementById("kycCount").textContent=rows.filter(x=>x.kyc_status==="submitted" || x.kyc_status==="pending").length;
     if(!rows.length){box.innerHTML="<p class='muted'>No KYC requests.</p>";return;}
     box.innerHTML=rows.map(x=>`
       <div class="item">
         <b>${esc(x.full_name||"Unnamed")}</b>
         <div class="small muted">User ID: ${esc(x.user_id||"")}</div>
         <p>Status: <span class="badge">${esc(x.kyc_status||"pending")}</span></p>
-        ${x.kyc_status==="submitted"?`
+        ${(x.kyc_status==="submitted" || x.kyc_status==="pending")?`
         <div class="row">
           <button class="success" onclick="reviewKyc('${escAttr(x.user_id)}','approved')">Approve</button>
           <button class="danger" onclick="reviewKyc('${escAttr(x.user_id)}','rejected')">Reject</button>
