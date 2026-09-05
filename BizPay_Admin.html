@@ -245,8 +245,8 @@ async function loadRedeems(){
         <p>Status: <span class="badge">${esc(x.status||"pending")}</span></p>
         ${x.status==="pending"?`
         <div class="row">
-          <button class="success" onclick="reviewRedeem('${escAttr(x.id)}','approved')">Approve</button>
-          <button class="danger" onclick="reviewRedeem('${escAttr(x.id)}','rejected')">Reject</button>
+          <button class="success" onclick="reviewRedeem('${escAttr(x.request_id)}','approved')">Approve</button>
+          <button class="danger" onclick="reviewRedeem('${escAttr(x.request_id)}','rejected')">Reject</button>
         </div>`:""}
       </div>`).join("");
   }catch(e){
