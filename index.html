@@ -45,8 +45,24 @@ button{width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-w
     <input id="email" type="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password (6+ characters)">
     <button class="primary" onclick="authAction()" id="authBtn">Login</button>
+    <div id="forgotWrap" style="text-align:center;margin-top:12px">
+      <span class="switch" style="display:inline" onclick="showReset()">Forgot password?</span>
+    </div>
     <div class="msg" id="authMsg"></div>
     <div class="switch" onclick="toggleAuth()" id="switchBtn">Don't have an account? Sign Up</div>
+  </div>
+</div>
+
+<div id="resetPage" class="hidden">
+  <div class="top"><div class="brand">₹ BizPay</div><div class="sub">Reset your password</div></div>
+  <div class="auth">
+    <button class="back" onclick="openScreen('authPage')">← Back to Login</button>
+    <h2>Forgot Password?</h2>
+    <p class="muted" style="margin:7px 0 15px">Enter your registered email and we'll send a reset link.</p>
+    <input id="resetEmail" type="email" placeholder="Email">
+    <button class="primary" onclick="sendReset()">Send Reset Link</button>
+    <div class="msg" id="resetMsg"></div>
+    <p class="note">Use only the email you registered with. Never share your password or reset link with anyone.</p>
   </div>
 </div>
 
@@ -150,6 +166,7 @@ function toggleAuth(){
   document.getElementById("authSub").textContent=signup?"Create your BizPay account":"Login to continue";
   document.getElementById("authBtn").textContent=signup?"Sign Up":"Login";
   document.getElementById("switchBtn").textContent=signup?"Already have an account? Login":"Don't have an account? Sign Up";
+  document.getElementById("forgotWrap").classList.toggle("hidden",signup);
   document.getElementById("authMsg").textContent="";
 }
 
@@ -200,6 +217,32 @@ async function authAction(){
   }
 }
 
+function showReset(){
+  const email=document.getElementById("email").value.trim();
+  document.getElementById("resetEmail").value=email;
+  document.getElementById("resetMsg").textContent="";
+  openScreen("resetPage");
+}
+
+async function sendReset(){
+  const email=document.getElementById("resetEmail").value.trim();
+  if(!email){
+    msg("resetMsg","Registered email enter karo.");
+    return;
+  }
+
+  try{
+    const {error}=await db.auth.resetPasswordForEmail(email,{
+      redirectTo:window.location.origin+window.location.pathname
+    });
+
+    if(error)throw error;
+    msg("resetMsg","Password reset link email par bhej diya gaya hai. Inbox/Spam check karo.",true);
+  }catch(e){
+    msg("resetMsg",e.message||"Password reset failed.");
+  }
+}
+
 async function loadAccount(){
   if(!currentUser)return;
 
@@ -231,7 +274,7 @@ async function loadAccount(){
 }
 
 function openScreen(id){
-  ["authPage","homePage","kycPage","redeemPage","historyPage"]
+  ["authPage","resetPage","homePage","kycPage","redeemPage","historyPage"]
     .forEach(x=>document.getElementById(x).classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
   updateUI();
