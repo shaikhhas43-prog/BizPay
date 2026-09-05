@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BizPay Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f7;font-family:Arial,sans-serif;color:#172033}
+.app{max-width:560px;margin:auto;min-height:100vh;background:#fff}
+.top{background:#111827;color:#fff;padding:24px}
+.brand{font-size:28px;font-weight:800}.sub{margin-top:5px;color:#cbd5e1}
+.card,.section{margin:18px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 5px 20px #00000010}
+input,select{width:100%;padding:13px;margin:7px 0;border:1px solid #d8dee8;border-radius:10px;font-size:15px}
+button{width:100%;padding:13px;border:0;border-radius:10px;font-size:15px;font-weight:700;margin-top:8px;cursor:pointer}
+.primary{background:#111827;color:#fff}.secondary{background:#e9eef5;color:#172033}
+.success{background:#e7f7ee;color:#087f45}.danger{background:#ffe7e7;color:#b42318}
+.hidden{display:none!important}.msg{min-height:20px;margin-top:10px;line-height:1.4}.ok{color:#087f45}.err{color:#c62828}
+.muted{color:#6b7482}.small{font-size:12px}.row{display:flex;gap:8px}.row>*{flex:1}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#f4f7fb;border-radius:12px;padding:14px}.stat b{font-size:22px;display:block;margin-top:5px}
+.item{border:1px solid #e5e9ef;border-radius:12px;padding:14px;margin:10px 0}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#fff4d6;color:#9a6b00;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div id="loginPage">
+  <div class="top"><div class="brand">BizPay Admin</div><div class="sub">Secure administration</div></div>
+  <div class="card">
+    <h2>Admin Login</h2>
+    <p class="muted">Only an authorised BizPay admin account can enter this panel.</p>
+    <input id="email" type="email" placeholder="Admin email">
+    <input id="password" type="password" placeholder="Password">
+    <button class="primary" onclick="adminLogin()">Login</button>
+    <div id="loginMsg" class="msg"></div>
+    <p class="small muted">Admin access is checked against the server-side profile role.</p>
+  </div>
+</div>
+
+<div id="panelPage" class="hidden">
+  <div class="top">
+    <div class="brand">BizPay Admin</div>
+    <div class="sub">Control Panel</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div><b>Admin</b><br><span id="adminEmail" class="muted small"></span></div>
+      <button class="danger" style="flex:0 0 120px" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Overview</h3>
+    <div class="statgrid">
+      <div class="stat">KYC Submitted<b id="kycCount">-</b></div>
+      <div class="stat">Pending Redeems<b id="redeemCount">-</b></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>🪪 KYC Requests</h3>
+    <button class="secondary" onclick="loadKyc()">↻ Refresh KYC</button>
+    <div id="kycMsg" class="msg"></div>
+    <div id="kycList"><p class="muted">Loading...</p></div>
+  </div>
+
+  <div class="section">
+    <h3>💸 Redeem Requests</h3>
+    <button class="secondary" onclick="loadRedeems()">↻ Refresh Redeems</button>
+    <div id="redeemMsg" class="msg"></div>
+    <div id="redeemList"><p class="muted">Loading...</p></div>
+  </div>
+
+  <div class="section">
+    <h3>ℹ️ Security</h3>
+    <p class="muted small">
+      This admin page never contains a service_role/secret key. Approve/reject operations
+      are designed to call server-side Supabase RPC functions.
+    </p>
+  </div>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL="https://ytdruccperzivynpfqgp.supabase.co";
+const SUPABASE_KEY="sb_publishable_2efp1gcKWJ4juqLfEz-ZkQ_v2x3JOkB";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null;
+
+function msg(id,text,ok=false){
+  const e=document.getElementById(id);
+  e.textContent=text;
+  e.className="msg "+(ok?"ok":"err");
+}
+function show(id){
+  document.getElementById("loginPage").classList.toggle("hidden",id!=="loginPage");
+  document.getElementById("panelPage").classList.toggle("hidden",id!=="panelPage");
+}
+
+async function adminLogin(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(!email||!password)return msg("loginMsg","Email aur password bharo.");
+  try{
+    const {data,error}=await db.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    currentUser=data.user;
+
+    const {data:profile,error:pe}=await db
+      .from("bizpay_profiles").select("role,full_name").eq("id",currentUser.id).maybeSingle();
+    if(pe)throw pe;
+
+    if(profile?.role!=="admin"){
+      await db.auth.signOut();
+      currentUser=null;
+      return msg("loginMsg","Admin access denied. Is account ka admin role nahi hai.");
+    }
+
+    document.getElementById("adminEmail").textContent=currentUser.email||"";
+    show("panelPage");
+    await refreshAll();
+  }catch(e){
+    msg("loginMsg",e.message||"Admin login failed.");
+  }
+}
+
+async function refreshAll(){
+  await Promise.all([loadKyc(),loadRedeems()]);
+}
+
+async function loadKyc(){
+  const box=document.getElementById("kycList");
+  box.innerHTML="<p class='muted'>Loading...</p>";
+  try{
+    const {data,error}=await db.rpc("bizpay_admin_list_kyc");
+    if(error)throw error;
+    const rows=data||[];
+    document.getElementById("kycCount").textContent=rows.filter(x=>x.kyc_status==="submitted").length;
+    if(!rows.length){box.innerHTML="<p class='muted'>No KYC requests.</p>";return;}
+    box.innerHTML=rows.map(x=>`
+      <div class="item">
+        <b>${esc(x.full_name||"Unnamed")}</b>
+        <div class="small muted">User ID: ${esc(x.user_id||"")}</div>
+        <p>Status: <span class="badge">${esc(x.kyc_status||"pending")}</span></p>
+        ${x.kyc_status==="submitted"?`
+        <div class="row">
+          <button class="success" onclick="reviewKyc('${escAttr(x.user_id)}','approved')">Approve</button>
+          <button class="danger" onclick="reviewKyc('${escAttr(x.user_id)}','rejected')">Reject</button>
+        </div>`:""}
+      </div>`).join("");
+  }catch(e){
+    box.innerHTML="";
+    msg("kycMsg",e.message||"KYC requests load nahi hui.");
+  }
+}
+
+async function reviewKyc(userId,status){
+  if(!confirm(status==="approved"?"KYC approve karna hai?":"KYC reject karna hai?"))return;
+  try{
+    const {error}=await db.rpc("bizpay_admin_review_kyc",{p_user_id:userId,p_status:status});
+    if(error)throw error;
+    msg("kycMsg","KYC "+status+" ho gayi.",true);
+    await refreshAll();
+  }catch(e){msg("kycMsg",e.message||"KYC review failed.");}
+}
+
+async function loadRedeems(){
+  const box=document.getElementById("redeemList");
+  box.innerHTML="<p class='muted'>Loading...</p>";
+  try{
+    const {data,error}=await db.rpc("bizpay_admin_list_redeems");
+    if(error)throw error;
+    const rows=data||[];
+    document.getElementById("redeemCount").textContent=rows.filter(x=>x.status==="pending").length;
+    if(!rows.length){box.innerHTML="<p class='muted'>No redeem requests.</p>";return;}
+    box.innerHTML=rows.map(x=>`
+      <div class="item">
+        <b>₹${Number(x.amount||0).toFixed(2)}</b>
+        <div class="small muted">User: ${esc(x.user_id||"")}</div>
+        <div class="small muted">Payout ID: ${esc(x.upi_id||"-")}</div>
+        <p>Status: <span class="badge">${esc(x.status||"pending")}</span></p>
+        ${x.status==="pending"?`
+        <div class="row">
+          <button class="success" onclick="reviewRedeem('${escAttr(x.id)}','approved')">Approve</button>
+          <button class="danger" onclick="reviewRedeem('${escAttr(x.id)}','rejected')">Reject</button>
+        </div>`:""}
+      </div>`).join("");
+  }catch(e){
+    box.innerHTML="";
+    msg("redeemMsg",e.message||"Redeem requests load nahi hui.");
+  }
+}
+
+async function reviewRedeem(id,status){
+  if(!confirm(status==="approved"?"Redeem approve karna hai?":"Redeem reject karna hai?"))return;
+  try{
+    const {error}=await db.rpc("bizpay_admin_review_redeem",{p_request_id:id,p_status:status});
+    if(error)throw error;
+    msg("redeemMsg","Redeem "+status+" ho gaya.",true);
+    await refreshAll();
+  }catch(e){msg("redeemMsg",e.message||"Redeem review failed.");}
+}
+
+function esc(v){
+  return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function escAttr(v){return String(v).replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
+
+async function logout(){
+  await db.auth.signOut();
+  currentUser=null;
+  show("loginPage");
+}
+</script>
+</body>
+</html>
