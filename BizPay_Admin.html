@@ -35,8 +35,42 @@ button{width:100%;padding:13px;border:0;border-radius:10px;font-size:15px;font-w
     <input id="email" type="email" placeholder="Admin email">
     <input id="password" type="password" placeholder="Password">
     <button class="primary" onclick="adminLogin()">Login</button>
+    <div style="text-align:center;margin-top:12px">
+      <span onclick="showAdminReset()" style="cursor:pointer">Forgot password?</span>
+    </div>
     <div id="loginMsg" class="msg"></div>
     <p class="small muted">Admin access is checked against the server-side profile role.</p>
+  </div>
+</div>
+
+
+<div id="resetPage" class="hidden">
+  <div class="top">
+    <div class="brand">BizPay Admin</div>
+    <div class="sub">Reset password</div>
+  </div>
+  <div class="card">
+    <button class="secondary" onclick="show('loginPage')">← Back to Login</button>
+    <h2>Forgot Password?</h2>
+    <p class="muted">Admin account ka registered email enter karo.</p>
+    <input id="resetEmail" type="email" placeholder="Admin email">
+    <button class="primary" onclick="sendAdminReset()">Send Reset Link</button>
+    <div id="resetMsg" class="msg"></div>
+  </div>
+</div>
+
+
+<div id="updatePasswordPage" class="hidden">
+  <div class="top">
+    <div class="brand">BizPay Admin</div>
+    <div class="sub">Set New Password</div>
+  </div>
+  <div class="card">
+    <h2>New Password</h2>
+    <input id="newPassword" type="password" placeholder="New Password (6+ characters)">
+    <input id="confirmPassword" type="password" placeholder="Confirm New Password">
+    <button class="primary" onclick="updateAdminPassword()">Update Password</button>
+    <div id="updateMsg" class="msg"></div>
   </div>
 </div>
 
@@ -98,7 +132,33 @@ function msg(id,text,ok=false){
 }
 function show(id){
   document.getElementById("loginPage").classList.toggle("hidden",id!=="loginPage");
+  document.getElementById("resetPage").classList.toggle("hidden",id!=="resetPage");
+  document.getElementById("updatePasswordPage").classList.toggle("hidden",id!=="updatePasswordPage");
   document.getElementById("panelPage").classList.toggle("hidden",id!=="panelPage");
+}
+
+
+function showAdminReset(){
+  document.getElementById("resetEmail").value=document.getElementById("email").value.trim();
+  document.getElementById("resetMsg").textContent="";
+  show("resetPage");
+}
+
+async function sendAdminReset(){
+  const email=document.getElementById("resetEmail").value.trim();
+  if(!email)return msg("resetMsg","Admin email bharo.");
+  const btn=document.querySelector('#resetPage button.primary');
+  if(btn)btn.disabled=true;
+  try{
+    const redirectTo=window.location.origin+window.location.pathname;
+    const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
+    if(error)throw error;
+    msg("resetMsg","Reset link email par bhej diya gaya. Inbox/Spam bhi check karo.",true);
+  }catch(e){
+    msg("resetMsg",e.message||"Reset email send nahi hua.");
+  }finally{
+    if(btn)btn.disabled=false;
+  }
 }
 
 async function adminLogin(){
@@ -209,6 +269,25 @@ function esc(v){
   return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 }
 function escAttr(v){return String(v).replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
+
+
+async function updateAdminPassword(){
+  const p=document.getElementById("newPassword").value;
+  const c=document.getElementById("confirmPassword").value;
+  if(!p||!c)return msg("updateMsg","Dono password fields bharo.");
+  if(p.length<6)return msg("updateMsg","Password kam se kam 6 characters ka rakho.");
+  if(p!==c)return msg("updateMsg","Dono passwords same hone chahiye.");
+  try{
+    const {error}=await db.auth.updateUser({password:p});
+    if(error)throw error;
+    msg("updateMsg","Password successfully update ho gaya. Ab Admin Login karo.",true);
+    setTimeout(async()=>{await db.auth.signOut();show("loginPage");},1200);
+  }catch(e){msg("updateMsg",e.message||"Password update nahi hua.");}
+}
+
+db.auth.onAuthStateChange((event)=>{
+  if(event==="PASSWORD_RECOVERY") show("updatePasswordPage");
+});
 
 async function logout(){
   await db.auth.signOut();
