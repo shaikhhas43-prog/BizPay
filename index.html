@@ -51,6 +51,22 @@ button{width:100%;padding:14px;border:0;border-radius:10px;font-size:15px;font-w
   </div>
 </div>
 
+
+<div id="updatePasswordPage" class="hidden">
+  <div class="top">
+    <div class="brand">₹ BizPay</div>
+    <div class="sub">Set New Password</div>
+  </div>
+  <div class="auth">
+    <h2>New Password</h2>
+    <p class="muted">Apna naya password set karo.</p>
+    <input id="newPassword" type="password" placeholder="New Password (6+ characters)">
+    <input id="confirmPassword" type="password" placeholder="Confirm New Password">
+    <button class="primary" onclick="updatePassword()">Update Password</button>
+    <div id="updatePasswordMsg" class="msg"></div>
+  </div>
+</div>
+
 <div id="homePage" class="hidden">
   <div class="top"><div class="brand">BizPay</div><div class="sub">Welcome, <span id="welcomeName">User</span></div></div>
   <div class="card">
@@ -134,7 +150,7 @@ function msg(id,text,ok=false){
  const e=document.getElementById(id); e.textContent=text; e.className="msg "+(ok?"ok":"err");
 }
 function openScreen(id){
- ["authPage","resetPage","homePage","profilePage","redeemPage","historyPage","adminPage"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+ ["authPage","resetPage","updatePasswordPage","homePage","profilePage","redeemPage","historyPage","adminPage"].forEach(x=>document.getElementById(x).classList.add("hidden"));
  document.getElementById(id).classList.remove("hidden");
  updateUI();
 }
@@ -147,13 +163,49 @@ function toggleAuth(){
  document.getElementById("switchBtn").textContent=signup?"Already have an account? Login":"Don't have an account? Sign Up";
  document.getElementById("forgotWrap").classList.toggle("hidden",signup);
 }
-function showReset(){document.getElementById("resetEmail").value=document.getElementById("email").value.trim();openScreen("resetPage")}
+function showReset(){
+ const email=document.getElementById("email").value.trim();
+ document.getElementById("resetEmail").value=email;
+ document.getElementById("resetMsg").textContent="";
+ openScreen("resetPage");
+}
+
 async function sendReset(){
  const email=document.getElementById("resetEmail").value.trim();
  if(!email)return msg("resetMsg","Email bharo.");
- const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
- if(error)return msg("resetMsg",error.message);
- msg("resetMsg","Reset link email par bhej diya gaya.",true);
+ if(!email.includes("@"))return msg("resetMsg","Valid email bharo.");
+ const btn=document.querySelector("#resetPage button.primary");
+ if(btn)btn.disabled=true;
+ try{
+   const redirectTo=window.location.origin+window.location.pathname;
+   const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
+   if(error)throw error;
+   msg("resetMsg","Reset link email par bhej diya gaya. Inbox aur Spam/Junk bhi check karo.",true);
+ }catch(e){
+   msg("resetMsg",e.message||"Reset email send nahi hua.");
+ }finally{
+   if(btn)btn.disabled=false;
+ }
+}
+
+async function updatePassword(){
+ const p=document.getElementById("newPassword").value;
+ const c=document.getElementById("confirmPassword").value;
+ if(!p||!c)return msg("updatePasswordMsg","Dono password fields bharo.");
+ if(p.length<6)return msg("updatePasswordMsg","Password kam se kam 6 characters ka rakho.");
+ if(p!==c)return msg("updatePasswordMsg","Dono passwords same hone chahiye.");
+ const btn=document.querySelector("#updatePasswordPage button.primary");
+ if(btn)btn.disabled=true;
+ try{
+   const {error}=await db.auth.updateUser({password:p});
+   if(error)throw error;
+   msg("updatePasswordMsg","Password successfully update ho gaya. Ab login kar sakte ho.",true);
+   setTimeout(async()=>{await db.auth.signOut();openScreen("authPage");},1200);
+ }catch(e){
+   msg("updatePasswordMsg",e.message||"Password update nahi hua.");
+ }finally{
+   if(btn)btn.disabled=false;
+ }
 }
 async function authAction(){
  const email=document.getElementById("email").value.trim(),password=document.getElementById("password").value;
@@ -219,9 +271,28 @@ async function checkAdmin(){
  el.textContent=data?.role==="admin"?"Admin access enabled":"Normal user";
 }
 async function logout(){await db.auth.signOut();currentUser=null;profile=null;wallet=null;redeemRequests=[];openScreen("authPage")}
-db.auth.onAuthStateChange(async (_event,session)=>{
- if(session?.user){currentUser=session.user;try{await loadAccount();updateUI()}catch(e){}}
+db.auth.onAuthStateChange(async (event,session)=>{
+  if(event==="PASSWORD_RECOVERY"){
+    openScreen("updatePasswordPage");
+    return;
+  }
+  if(session?.user){
+    currentUser=session.user;
+    try{await loadAccount();updateUI()}catch(e){}
+  }
 });
+
+(async function initBizPay(){
+  const {data}=await db.auth.getSession();
+  const session=data?.session;
+  const hash=window.location.hash||"";
+  if(session && (hash.includes("type=recovery") || hash.includes("access_token"))){
+    openScreen("updatePasswordPage");
+  }else if(session?.user){
+    currentUser=session.user;
+    try{await loadAccount();openScreen("homePage")}catch(e){}
+  }
+})();
 </script>
 </body>
 </html>
