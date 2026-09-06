@@ -146,7 +146,20 @@ button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:1
     <div class="note">Read-only prototype ledger. No real bank/UPI transfer is initiated here.</div>
   </div>
 
-  <div class="section" id="kycSection">
+  <div class="section" id="usersSection">
+  <div class="txToolbar">
+    <div style="flex:1">
+      <h2 style="margin:0">👥 Users</h2>
+      <div class="muted small">BizPay user overview</div>
+    </div>
+    <button class="secondary" onclick="loadUsers()">↻ Refresh</button>
+  </div>
+  <input id="userSearch" placeholder="🔎 Search user ID or name..." oninput="renderUsers()">
+  <div id="usersMsg" class="msg"></div>
+  <div id="usersList"><p class="muted">Loading...</p></div>
+</div>
+
+<div class="section" id="kycSection">
     <div class="txToolbar">
       <div style="flex:1"><h2 style="margin:0">🪪 KYC Requests</h2><div class="muted small">Review submitted KYC requests</div></div>
       <button class="secondary" onclick="loadKyc()">↻ Refresh</button>
@@ -166,7 +179,7 @@ button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:1
 
   <nav class="bottom">
     <a class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bi">⌂</span>Dashboard</a>
-    <a onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bi">👥</span>Users</a>
+    <a onclick="document.getElementById('usersSection').scrollIntoView({behavior:'smooth'})"><span class="bi">👥</span>Users</a>
     <a onclick="document.getElementById('kycSection').scrollIntoView({behavior:'smooth'})"><span class="bi">🛡</span>KYC</a>
     <a onclick="document.getElementById('redeemSection').scrollIntoView({behavior:'smooth'})"><span class="bi">₹</span>Redeem</a>
     <a onclick="document.getElementById('txSection').scrollIntoView({behavior:'smooth'})"><span class="bi">▤</span>Transactions</a>
@@ -247,6 +260,83 @@ async function adminLogin(){
   }
 }
 
+let userRows=[];
+
+async function loadUsers(){
+  const box=document.getElementById("usersList");
+  box.innerHTML="<p class='muted'>Loading...</p>";
+  try{
+    const [k,r] = await Promise.all([
+      db.rpc("bizpay_admin_list_kyc"),
+      db.rpc("bizpay_admin_list_redeems")
+    ]);
+    if(k.error) throw k.error;
+    if(r.error) throw r.error;
+
+    const map=new Map();
+
+    (k.data||[]).forEach(x=>{
+      const id=x.user_id||x.id;
+      if(!id)return;
+      const old=map.get(id)||{user_id:id};
+      map.set(id,{...old,
+        full_name:x.full_name||x.name||old.full_name||"BizPay User",
+        kyc_status:x.kyc_status||x.status||old.kyc_status||"pending"
+      });
+    });
+
+    (r.data||[]).forEach(x=>{
+      const id=x.user_id;
+      if(!id)return;
+      const old=map.get(id)||{user_id:id};
+      map.set(id,{...old, redeem_status:x.status||old.redeem_status});
+    });
+
+    (txRows||[]).forEach(x=>{
+      const id=x.user_id;
+      if(!id)return;
+      const old=map.get(id)||{user_id:id};
+      map.set(id,{...old});
+    });
+
+    userRows=Array.from(map.values());
+    document.getElementById("usersCount").textContent=userRows.length||0;
+    renderUsers();
+  }catch(e){
+    box.innerHTML="";
+    msg("usersMsg",e.message||"Users load nahi hue.");
+  }
+}
+
+function renderUsers(){
+  const box=document.getElementById("usersList");
+  const q=(document.getElementById("userSearch")?.value||"").toLowerCase().trim();
+  const rows=userRows.filter(x=>
+    !q || String(x.user_id||"").toLowerCase().includes(q) ||
+    String(x.full_name||"").toLowerCase().includes(q)
+  );
+  if(!rows.length){box.innerHTML="<p class='muted'>No users found.</p>";return;}
+
+  box.innerHTML=rows.map(x=>{
+    const initials=(x.full_name||"U").trim().charAt(0).toUpperCase();
+    const kyc=x.kyc_status||"—";
+    const redeem=x.redeem_status||"—";
+    return `<div class="item">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="avatar" style="background:#eaf3ff;color:#1261d6">${esc(initials)}</div>
+        <div style="flex:1;min-width:0">
+          <b>${esc(x.full_name||"BizPay User")}</b>
+          <div class="small muted" style="word-break:break-all">${esc(x.user_id)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <span class="badge">KYC: ${esc(kyc)}</span>
+        <span class="badge">Redeem: ${esc(redeem)}</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
 async function loadTransactions(){
   const box=document.getElementById("txList");
   box.innerHTML="<p class='muted'>Loading...</p>";
@@ -303,6 +393,7 @@ function renderTransactions(){
 }
 async function refreshAll(){
   await Promise.all([loadKyc(),loadRedeems(),loadTransactions()]);
+  await loadUsers();
 }
 
 async function loadKyc(){
