@@ -267,18 +267,6 @@ input:focus{border-color:#74aef4;box-shadow:0 0 0 3px rgba(11,114,231,.09)}
   </div>
 </section>
 
-<!-- ADMIN TEST -->
-<section id="adminPage" class="screen hidden">
-  <div class="pageHead"><button class="back" onclick="openScreen('homePage')">←</button><div><h2>Admin Tools</h2><p>Prototype ledger controls</p></div></div>
-  <div class="form">
-    <label>User UUID</label><input id="creditUserId" placeholder="User UUID">
-    <label>Test Credit Amount</label><input id="creditAmount" type="number" min="1" placeholder="Amount">
-    <button class="primary" onclick="adminCredit()">Credit Test Wallet</button>
-    <div id="adminMsg" class="msg"></div>
-    <div class="note">Test-only. Real-money settlement is not performed from the browser.</div>
-  </div>
-</section>
-
 <nav id="bottomNav" class="bottomnav hidden">
   <button class="nav active" onclick="openScreen('homePage')"><span class="ni">⌂</span>Home</button>
   <button class="nav" onclick="openScreen('redeemPage')"><span class="ni">↗</span>Redeem</button>
@@ -478,9 +466,6 @@ async function requestRedeem(){
   msg("redeemMsg","Redeem request submit ho gayi. Status: Pending",true);
 }
 
-async function adminCredit(){
-  msg("adminMsg","Browser se direct wallet credit intentionally disabled. Secure admin RPC/function use karo.");
-}
 
 async function logout(){
   await db.auth.signOut();
@@ -504,7 +489,13 @@ db.auth.onAuthStateChange(async(event,session)=>{
   }else openScreen("authPage");
 })();
 </script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
 </body>
 </html>
 
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>

@@ -1,0 +1,11 @@
+{
+  "name": "BizPay User",
+  "short_name": "BizPay",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f7fb",
+  "theme_color": "#1478e8",
+  "description": "BizPay User prototype wallet app"
+}
