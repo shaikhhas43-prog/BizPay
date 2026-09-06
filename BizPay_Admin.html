@@ -43,7 +43,7 @@ button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:1
 .bottom a{text-decoration:none;color:#7c899d;text-align:center;font-size:10px;font-weight:700;padding:6px;border-radius:16px;cursor:pointer}.bottom a.active{color:var(--blue);background:#eaf3ff}.bottom .bi{display:block;font-size:19px;margin-bottom:3px}
 .note{background:#eef6ff;border-radius:15px;padding:13px;color:#4b6380;font-size:12px;line-height:1.5}
 @media(min-width:800px){.app{max-width:1200px}.top{border-radius:0 0 38px 38px;padding:30px 40px}.hero,.section,.card{margin-left:40px;margin-right:40px}.metrics{margin-left:40px;margin-right:40px}.bottom{border-radius:20px 20px 0 0}.quickgrid{grid-template-columns:repeat(3,220px)}}
-@media(max-width:700px){.metrics{grid-template-columns:repeat(2,1fr)}.txToolbar{align-items:stretch}.txToolbar{flex-direction:column}.txToolbar button{width:100%}}
+@media(max-width:700px){.metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.metric{padding:10px 8px;border-radius:18px}.metric .ico{width:34px;height:34px;font-size:17px;margin-bottom:6px}.metric .label{font-size:10px;line-height:1.2}.metric .num{font-size:20px}.txToolbar{align-items:stretch}.txToolbar{flex-direction:column}.txToolbar button{width:100%}}
 </style>
 </head>
 <body>
@@ -97,23 +97,21 @@ button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:1
 </div>
 
 <div id="panelPage" class="hidden">
-  <div class="top">
-    <div class="profileRow">
+  <div class="top" style="padding:26px 24px 24px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div class="brand">BizPay <span style="font-size:12px;vertical-align:middle;background:#ffffff25;padding:6px 9px;border-radius:999px">ADMIN</span></div>
+        <div class="brand">BizPay <span style="font-size:12px;vertical-align:middle;background:#ffffff28;padding:7px 10px;border-radius:999px">Admin</span></div>
         <div class="sub">Admin Control Center</div>
       </div>
-      <button class="secondary" style="width:auto;background:#ffffff22;color:#fff;border:1px solid #ffffff33" onclick="logout()">⇥</button>
+      <button class="secondary" style="width:48px;height:48px;padding:0;background:#ffffff22;color:#fff;border:1px solid #ffffff35;font-size:20px" onclick="logout()">⇥</button>
     </div>
-  </div>
-
-  <div class="hero">
-    <span class="adminpill">Admin</span>
-    <div class="welcome">Welcome back,</div>
-    <div class="name" id="adminName">Admin</div>
-    <div style="display:flex;justify-content:flex-end;align-items:center;gap:9px;margin-top:-30px">
+    <div style="margin-top:22px">
+      <div style="font-size:14px;color:#dcecff">Welcome back,</div>
+      <div id="adminName" style="font-size:30px;font-weight:800;margin-top:3px">Admin</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:-10px">
       <div class="avatar" id="adminAvatar">A</div>
-      <div class="small" id="heroEmail" style="color:#fff"></div>
+      <div id="heroEmail" class="small" style="color:#fff"></div>
     </div>
   </div>
 
@@ -124,28 +122,17 @@ button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:1
     <div class="metric"><div class="ico">▤</div><div class="label">Transactions</div><div class="num" id="txCount">0</div></div>
   </div>
 
-  <div class="section">
-    <h3 style="margin-top:0">Quick Actions</h3>
-    <div class="quickgrid">
-      <div class="quick" onclick="document.getElementById('kycSection').scrollIntoView({behavior:'smooth'})"><div class="qico">🪪</div><b>KYC</b></div>
-      <div class="quick" onclick="document.getElementById('redeemSection').scrollIntoView({behavior:'smooth'})"><div class="qico">💸</div><b>Redeem</b></div>
-      <div class="quick" onclick="document.getElementById('txSection').scrollIntoView({behavior:'smooth'})"><div class="qico">📊</div><b>Transactions</b></div>
+  <div class="section" id="txSection" style="margin-top:16px">
+    <div class="txToolbar">
+      <div style="flex:1">
+        <h2 style="margin:0">▤ Transactions</h2>
+        <div class="muted small">Admin wallet ledger</div>
+      </div>
+      <button class="secondary" onclick="loadTransactions()">↻ Refresh</button>
     </div>
-  </div>
 
-  <div class="section" id="kycSection">
-    <div class="txToolbar"><div style="flex:1"><h2 style="margin:0">KYC Requests</h2><div class="muted small">Review submitted KYC requests</div></div><button class="secondary" onclick="loadKyc()">↻ Refresh</button></div>
-    <div id="kycMsg" class="msg"></div><div id="kycList"><p class="muted">Loading...</p></div>
-  </div>
-
-  <div class="section" id="redeemSection">
-    <div class="txToolbar"><div style="flex:1"><h2 style="margin:0">Redeem Requests</h2><div class="muted small">Review wallet redeem requests</div></div><button class="secondary" onclick="loadRedeems()">↻ Refresh</button></div>
-    <div id="redeemMsg" class="msg"></div><div id="redeemList"><p class="muted">Loading...</p></div>
-  </div>
-
-  <div class="section" id="txSection">
-    <div class="txToolbar"><div style="flex:1"><h2 style="margin:0">Transactions</h2><div class="muted small">Admin wallet ledger</div></div><button class="secondary" onclick="loadTransactions()">↻ Refresh</button></div>
     <input id="txSearch" placeholder="🔎 Search user ID or description..." oninput="renderTransactions()">
+
     <div class="filterbar">
       <button class="filter active" data-filter="all" onclick="setTxFilter('all',this)">All</button>
       <button class="filter" data-filter="credit" onclick="setTxFilter('credit',this)">Credit</button>
@@ -153,8 +140,28 @@ button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:1
       <button class="filter" data-filter="kyc" onclick="setTxFilter('kyc',this)">KYC</button>
       <button class="filter" data-filter="redeem" onclick="setTxFilter('redeem',this)">Redeem</button>
     </div>
-    <div id="txMsg" class="msg"></div><div id="txList"><p class="muted">Loading...</p></div>
+
+    <div id="txMsg" class="msg"></div>
+    <div id="txList"><p class="muted">Loading...</p></div>
     <div class="note">Read-only prototype ledger. No real bank/UPI transfer is initiated here.</div>
+  </div>
+
+  <div class="section" id="kycSection">
+    <div class="txToolbar">
+      <div style="flex:1"><h2 style="margin:0">🪪 KYC Requests</h2><div class="muted small">Review submitted KYC requests</div></div>
+      <button class="secondary" onclick="loadKyc()">↻ Refresh</button>
+    </div>
+    <div id="kycMsg" class="msg"></div>
+    <div id="kycList"><p class="muted">Loading...</p></div>
+  </div>
+
+  <div class="section" id="redeemSection">
+    <div class="txToolbar">
+      <div style="flex:1"><h2 style="margin:0">💸 Redeem Requests</h2><div class="muted small">Review wallet redeem requests</div></div>
+      <button class="secondary" onclick="loadRedeems()">↻ Refresh</button>
+    </div>
+    <div id="redeemMsg" class="msg"></div>
+    <div id="redeemList"><p class="muted">Loading...</p></div>
   </div>
 
   <nav class="bottom">
