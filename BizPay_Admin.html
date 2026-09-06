@@ -159,6 +159,21 @@ button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:1
   <div id="usersList"><p class="muted">Loading...</p></div>
 </div>
 
+
+<div class="section" id="addBalanceSection">
+  <div class="txToolbar">
+    <div style="flex:1">
+      <h2 style="margin:0">➕ Add Test Balance</h2>
+      <div class="muted small">Prototype wallet only — no real bank/UPI money is sent.</div>
+    </div>
+  </div>
+  <div class="note" style="margin:12px 0">Use this only for testing the BizPay wallet. This adds an in-app test credit and records it in the prototype ledger.</div>
+  <input id="addUserId" placeholder="User UUID">
+  <input id="addAmount" type="number" min="0.01" step="0.01" placeholder="Amount (₹)" style="margin-top:10px">
+  <button class="primary" style="margin-top:10px;width:100%" onclick="addTestBalance()">Add Test Balance</button>
+  <div id="addBalanceMsg" class="msg"></div>
+</div>
+
 <div class="section" id="kycSection">
     <div class="txToolbar">
       <div style="flex:1"><h2 style="margin:0">🪪 KYC Requests</h2><div class="muted small">Review submitted KYC requests</div></div>
@@ -181,6 +196,7 @@ button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:1
     <a class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bi">⌂</span>Dashboard</a>
     <a onclick="document.getElementById('usersSection').scrollIntoView({behavior:'smooth'})"><span class="bi">👥</span>Users</a>
     <a onclick="document.getElementById('kycSection').scrollIntoView({behavior:'smooth'})"><span class="bi">🛡</span>KYC</a>
+    <a onclick="document.getElementById('addBalanceSection').scrollIntoView({behavior:'smooth'})"><span class="bi">＋</span>Add Test</a>
     <a onclick="document.getElementById('redeemSection').scrollIntoView({behavior:'smooth'})"><span class="bi">₹</span>Redeem</a>
     <a onclick="document.getElementById('txSection').scrollIntoView({behavior:'smooth'})"><span class="bi">▤</span>Transactions</a>
   </nav>
@@ -333,8 +349,34 @@ function renderUsers(){
         <span class="badge">KYC: ${esc(kyc)}</span>
         <span class="badge">Redeem: ${esc(redeem)}</span>
       </div>
+      <button class="secondary" style="margin-top:12px;width:100%" onclick="openAddBalance('${escAttr(x.user_id)}','${escAttr(x.full_name||"BizPay User")}')">➕ Add Test Balance</button>
     </div>`;
   }).join("");
+}
+
+function openAddBalance(userId, name){
+  document.getElementById("addUserId").value=userId||"";
+  document.getElementById("addAmount").value="";
+  document.getElementById("addBalanceMsg").textContent=name?"Selected: "+name:"";
+  document.getElementById("addBalanceSection").scrollIntoView({behavior:"smooth"});
+}
+
+async function addTestBalance(){
+  const userId=document.getElementById("addUserId").value.trim();
+  const amount=Number(document.getElementById("addAmount").value);
+  if(!userId)return msg("addBalanceMsg","User UUID bharo.");
+  if(!Number.isFinite(amount)||amount<=0)return msg("addBalanceMsg","Valid amount bharo.");
+  if(amount>100000)return msg("addBalanceMsg","Test amount ₹1,00,000 se zyada nahi ho sakta.");
+  if(!confirm("₹"+amount.toFixed(2)+" test balance add karna hai? Ye real bank/UPI transfer nahi hai."))return;
+  try{
+    const {data,error}=await db.rpc("bizpay_admin_add_test_balance",{p_user_id:userId,p_amount:amount});
+    if(error)throw error;
+    msg("addBalanceMsg","Test balance add ho gaya. New balance: ₹"+Number(data||0).toFixed(2),true);
+    await loadTransactions();
+    await loadUsers();
+  }catch(e){
+    msg("addBalanceMsg",e.message||"Test balance add nahi hua.");
+  }
 }
 
 async function loadTransactions(){
