@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BizPay</title>
+<style>
+:root{--blue:#0875ee;--blue2:#0757c9;--bg:#f4f8fd;--text:#14213d;--muted:#75839a;--line:#e3eaf3;--green:#0ba45a;--red:#d83a42}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,Arial,sans-serif;color:var(--text)}
+.app{max-width:480px;min-height:100vh;margin:auto;background:#fff;overflow:hidden}.screen{min-height:100vh}.hide{display:none!important}
+.splash{display:grid;place-items:center;text-align:center;color:#fff;background:linear-gradient(145deg,#083c98,#001e58)}
+.logo{width:94px;height:94px;border-radius:27px;margin:auto;display:grid;place-items:center;background:linear-gradient(145deg,#13caff,#1460e8);font-size:44px;font-weight:900;box-shadow:0 16px 35px #00174288}.brand{font-size:42px;font-weight:900;margin-top:15px}.tag{margin-top:30px;font-size:14px}
+.auth{padding:34px 24px;background:linear-gradient(#fff,#f5faff)}.auth .logo{width:74px;height:74px;font-size:34px;box-shadow:none}.auth .brand{text-align:center;font-size:31px;color:#123d7c}.auth h2{text-align:center;margin:27px 0 5px}.sub{text-align:center;color:var(--muted);margin-bottom:25px}
+.field{margin:13px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}.field input{width:100%;padding:15px;border:1px solid var(--line);border-radius:12px;background:#fff;outline:0}.field input:focus{border-color:#6ba7f5;box-shadow:0 0 0 3px #0875ee12}
+.btn{width:100%;border:0;border-radius:12px;padding:15px;background:linear-gradient(90deg,var(--blue),#1765dc);color:#fff;font-weight:800}.outline{width:100%;border:1px solid var(--blue);border-radius:12px;padding:14px;background:#fff;color:var(--blue);font-weight:800}.link{border:0;background:none;color:var(--blue);font-weight:700}.or{display:flex;align-items:center;gap:10px;color:#8b96a7;font-size:12px;margin:19px 0}.or:before,.or:after{content:"";height:1px;background:var(--line);flex:1}.msg{font-size:12px;color:var(--red);margin-top:8px}
+.top{background:linear-gradient(145deg,var(--blue),#0b5ed2);color:#fff;padding:18px;border-radius:0 0 24px 24px}.toprow{display:flex;justify-content:space-between;align-items:center}.toprow h1{margin:0;font-size:25px}.balance{margin-top:19px;padding:18px;border-radius:17px;background:#ffffff1c;border:1px solid #ffffff30}.balance small{opacity:.92}.balance strong{display:block;font-size:32px;margin:5px 0 12px}.add{border:0;background:#fff;color:#1261d5;padding:10px 19px;border-radius:9px;font-weight:800}
+.content{padding:15px 14px 90px}.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.quick button{border:0;background:#fff;padding:9px 2px;border-radius:14px;box-shadow:0 3px 12px #16365d10;color:#263650;font-size:11px;font-weight:800}.qi{width:39px;height:39px;border-radius:11px;background:#eaf4ff;display:grid;place-items:center;margin:auto auto 6px;font-size:18px}.banner{margin:16px 0;padding:14px;border-radius:15px;background:linear-gradient(100deg,#b8f1ee,#e5f7ff);color:#075b78;font-weight:800}.banner small{font-weight:600}.head{display:flex;justify-content:space-between;align-items:center}.head h3{margin:12px 0 7px}.head button{border:0;background:none;color:var(--blue);font-weight:800}
+.tx{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:14px;margin:8px 0}.txi{width:38px;height:38px;border-radius:12px;display:grid;place-items:center}.credit{background:#e1faec;color:var(--green)}.debit{background:#ffe7e8;color:var(--red)}.txmain{flex:1}.txmain b{font-size:13px}.txmain small{display:block;color:var(--muted);margin-top:3px}.amount{font-weight:900}.green{color:var(--green)}.red{color:var(--red)}
+.nav{position:fixed;z-index:8;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:66px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr)}.nav button{border:0;background:none;color:#75839a;font-size:11px;font-weight:700}.nav .active{color:var(--blue)}.nav i{display:block;font-style:normal;font-size:20px;margin-bottom:2px}
+.page{padding:18px 16px 30px}.ph{display:flex;align-items:center;gap:12px;margin-bottom:18px}.ph h2{margin:0;font-size:20px}.back{width:40px;height:40px;border:0;border-radius:10px;background:#eef5ff}.card{border:1px solid var(--line);border-radius:16px;padding:16px;margin:11px 0}.item{padding:14px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}.item b{font-size:14px}.item small{display:block;color:var(--muted);margin-top:4px}
+.amountbox{font-size:30px;font-weight:900;width:100%;padding:17px;border:1px solid var(--line);border-radius:12px;outline:0}.chips{display:flex;gap:7px;margin:9px 0}.chips button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 12px}.note{padding:12px;border-radius:12px;background:#eef6ff;color:#5d6e86;font-size:12px;line-height:1.5}
+.profile{text-align:center}.avatar{width:78px;height:78px;border-radius:50%;background:#eaf0f7;display:grid;place-items:center;margin:auto;font-size:34px}.status{display:inline-block;margin-top:8px;padding:5px 10px;border-radius:20px;background:#dcf8e8;color:#078b48;font-size:12px;font-weight:800}.menu{margin-top:18px}.menu button{width:100%;border:0;border-bottom:1px solid var(--line);background:#fff;padding:16px 3px;text-align:left;font-weight:700;display:flex;justify-content:space-between}.danger{color:var(--red)}
+.toast{position:fixed;z-index:30;bottom:80px;left:50%;transform:translateX(-50%);background:#15243d;color:#fff;padding:11px 15px;border-radius:10px;font-size:13px}
+.success{text-align:center;padding:75px 22px}.check{width:90px;height:90px;border-radius:50%;background:#ddfae9;color:#09a45a;font-size:52px;display:grid;place-items:center;margin:auto}
+</style>
+</head>
+<body><div class="app">
+
+<section id="splash" class="screen splash"><div><div class="logo">₹B</div><div class="brand">BizPay</div><div style="margin-top:36px">Your Business<br>Your Wallet<br>Your Growth</div><div class="tag">Simple • Secure • Reliable</div></div></section>
+
+<section id="auth" class="screen auth hide">
+<div class="logo">₹B</div><div class="brand">BizPay</div><h2 id="authTitle">Welcome Back</h2><div class="sub" id="authSub">Login to your account</div>
+<div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com"></div>
+<div class="field"><label>Password</label><input id="password" type="password" placeholder="Password"></div>
+<button class="btn" id="authBtn" onclick="login()">Login</button>
+<div style="text-align:center;margin-top:9px"><button class="link" onclick="resetPassword()">Forgot Password?</button></div>
+<div class="or">OR</div><button class="outline" onclick="toggleSignup()">Create Account</button><div id="authMsg" class="msg"></div>
+</section>
+
+<section id="home" class="screen hide">
+<div class="top"><div class="toprow"><h1>BizPay</h1><span>♧</span></div><div class="balance"><small>Wallet Balance</small><strong id="balance">₹0</strong><button class="add" onclick="toast('Wallet funding is not connected yet')">＋ Add Money</button></div></div>
+<div class="content"><div class="quick">
+<button onclick="go('redeem')"><div class="qi">↗</div>Redeem</button><button onclick="go('kyc')"><div class="qi">✓</div>KYC</button><button onclick="go('tx')"><div class="qi">▤</div>Transactions</button><button onclick="toast('Support is coming soon')"><div class="qi">?</div>Support</button></div>
+<div class="banner">Grow Your Business<br><small>Manage your earnings easily</small></div>
+<div class="head"><h3>Recent Transactions</h3><button onclick="go('tx')">See All</button></div><div id="recent"></div></div>
+<nav class="nav"><button class="active" onclick="go('home')"><i>⌂</i>Home</button><button onclick="go('redeem')"><i>↗</i>Redeem</button><button onclick="go('tx')"><i>▤</i>History</button><button onclick="go('profile')"><i>●</i>Profile</button></nav>
+</section>
+
+<section id="kyc" class="screen hide"><div class="page"><div class="ph"><button class="back" onclick="go('home')">←</button><h2>KYC Verification</h2></div>
+<div class="card" style="text-align:center"><div style="font-size:48px">🛡️</div><h3>Complete Your KYC</h3><p style="font-size:12px;color:var(--muted)">Verification status is managed by the BizPay admin.</p></div>
+<div class="card"><div class="item"><b>Identity Details</b><small>Basic profile information</small></div><div class="item"><b>PAN Card</b><small>Secure verification step</small></div><div class="item"><b>Selfie</b><small>Identity verification step</small></div><div class="item"><b>Bank / UPI Details</b><small>Required for an authorised payout provider</small></div></div>
+<div class="field"><label>Full Name</label><input id="kycName" placeholder="Full name"></div><button class="btn" onclick="submitKyc()">Submit for Verification</button><div id="kycMsg" class="msg"></div></div></section>
+
+<section id="redeem" class="screen hide"><div class="page"><div class="ph"><button class="back" onclick="go('home')">←</button><h2>Redeem</h2></div>
+<div class="card"><small>Available Balance</small><div style="font-size:28px;font-weight:900;margin-top:4px" id="redeemBalance">₹0</div></div>
+<div class="field"><label>Enter Redeem Amount</label><input id="redeemAmount" class="amountbox" type="number" min="100" placeholder="500"></div>
+<div class="chips"><button onclick="setAmount(100)">₹100</button><button onclick="setAmount(500)">₹500</button><button onclick="setAmount(1000)">₹1,000</button><button onclick="setAmount(5000)">₹5,000</button></div>
+<div class="field"><label>UPI ID</label><input id="upi" placeholder="yourname@upi"></div>
+<div class="note">Minimum redeem amount is ₹100. Your request is sent to admin for review. Actual bank/UPI payout requires an authorised payment provider connection.</div>
+<button class="btn" style="margin-top:14px" onclick="submitRedeem()">Submit Request</button><div id="redeemMsg" class="msg"></div></div></section>
+
+<section id="tx" class="screen hide"><div class="page"><div class="ph"><button class="back" onclick="go('home')">←</button><h2>Transactions</h2></div><div id="txList"></div></div></section>
+
+<section id="profile" class="screen hide"><div class="page profile"><div class="ph" style="text-align:left"><button class="back" onclick="go('home')">←</button><h2>Profile</h2></div>
+<div class="avatar">●</div><h3 id="profileName">BizPay User</h3><div id="profileEmail" style="font-size:12px;color:var(--muted)"></div><span class="status" id="profileStatus">KYC Pending</span>
+<div class="card menu"><button onclick="go('kyc')">♙ My Profile <span>›</span></button><button onclick="go('kyc')">✓ KYC Status <span id="kycStatus">Pending ›</span></button><button onclick="toast('Payout details are handled after provider integration')">₹ Bank / UPI Details <span>›</span></button><button onclick="go('tx')">▤ Transaction History <span>›</span></button><button onclick="toast('Support is coming soon')">? Help & Support <span>›</span></button><button class="danger" onclick="logout()">⇥ Logout <span>›</span></button></div></div></section>
+
+<section id="success" class="screen hide"><div class="success"><div class="check">✓</div><h2>Redeem Request Submitted!</h2><p style="color:var(--muted)">Your request has been sent for admin review. Payment will only be processed after an authorised payout integration is connected.</p><button class="btn" onclick="go('home')">OK</button></div></section>
+
+<div id="toast" class="toast hide"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://ytdruccperzivynpfqgp.supabase.co";
+const SUPABASE_KEY="PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+const db=SUPABASE_KEY.startsWith("PASTE_")?null:supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let user=null,profile=null,wallet={balance:0};
+const $=id=>document.getElementById(id),money=n=>"₹"+Number(n||0).toLocaleString("en-IN");
+function toast(t){$("toast").textContent=t;$("toast").classList.remove("hide");setTimeout(()=>$("toast").classList.add("hide"),2300)}
+function go(id){document.querySelectorAll(".screen").forEach(x=>x.classList.add("hide"));$(id).classList.remove("hide");if(id==="home")loadHome();if(id==="tx")loadTransactions();if(id==="profile")showProfile();if(id==="redeem")$("redeemBalance").textContent=money(wallet.balance)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function renderTx(rows,el){if(!rows.length){el.innerHTML='<div class="card" style="color:var(--muted)">No transactions yet.</div>';return}el.innerHTML=rows.map(x=>{const credit=Number(x.amount||0)>=0;return `<div class="tx"><div class="txi ${credit?"credit":"debit"}">${credit?"↑":"↓"}</div><div class="txmain"><b>${esc(x.description||x.type||"Transaction")}</b><small>${new Date(x.created_at||Date.now()).toLocaleString()}</small></div><div class="amount ${credit?"green":"red"}">${credit?"+":"-"}${money(Math.abs(Number(x.amount||0)))}</div></div>`}).join("")}
+async function init(){setTimeout(async()=>{if(db){const s=await db.auth.getSession();if(s.data.session){user=s.data.session.user;await loadData();go("home");return}}$("splash").classList.add("hide");$("auth").classList.remove("hide")},700)}
+async function loadData(){const p=await db.from("bizpay_profiles").select("full_name,kyc_status,role").eq("id",user.id).maybeSingle();profile=p.data||{};const w=await db.from("bizpay_wallets").select("balance").eq("user_id",user.id).maybeSingle();wallet=w.data||{balance:0}}
+async function login(){const e=$("email").value.trim(),p=$("password").value;if(!e||!p)return $("authMsg").textContent="Email and password required.";if(!db)return $("authMsg").textContent="Supabase publishable key is not configured.";const r=await db.auth.signInWithPassword({email:e,password:p});if(r.error)return $("authMsg").textContent=r.error.message;user=r.data.user;await loadData();go("home")}
+function toggleSignup(){const s=$("authBtn").textContent==="Login";$("authTitle").textContent=s?"Create Account":"Welcome Back";$("authSub").textContent=s?"Register your BizPay account":"Login to your account";$("authBtn").textContent=s?"Sign Up":"Login";$("authBtn").onclick=s?register:login}
+async function register(){const e=$("email").value.trim(),p=$("password").value;if(!e||p.length<6)return $("authMsg").textContent="Enter a valid email and 6+ character password.";if(!db)return $("authMsg").textContent="Supabase publishable key is not configured.";const r=await db.auth.signUp({email:e,password:p});if(r.error)return $("authMsg").textContent=r.error.message;$("authMsg").textContent="Account created. Check your email if confirmation is enabled."}
+async function resetPassword(){if(!db)return $("authMsg").textContent="Supabase publishable key is not configured.";const e=$("email").value.trim();if(!e)return $("authMsg").textContent="Enter your email first.";const r=await db.auth.resetPasswordForEmail(e,{redirectTo:location.origin+location.pathname});$("authMsg").textContent=r.error?r.error.message:"Password reset email sent."}
+async function loadHome(){$("balance").textContent=money(wallet.balance);if(!db)return;const r=await db.from("bizpay_transactions").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(5);renderTx(r.data||[],$("recent"))}
+async function loadTransactions(){if(!db)return $("txList").innerHTML='<div class="card" style="color:var(--muted)">Connect Supabase to load transactions.</div>';const r=await db.from("bizpay_transactions").select("*").eq("user_id",user.id).order("created_at",{ascending:false});renderTx(r.data||[],$("txList"))}
+function showProfile(){$("profileName").textContent=profile?.full_name||"BizPay User";$("profileEmail").textContent=user?.email||"";const s=profile?.kyc_status||"pending";$("profileStatus").textContent=s==="approved"?"✓ Verified":"KYC Pending";$("kycStatus").textContent=s==="approved"?"Verified ›":"Pending ›"}
+async function submitKyc(){const n=$("kycName").value.trim();if(!n)return $("kycMsg").textContent="Enter your full name.";if(!db)return $("kycMsg").textContent="Supabase publishable key is not configured.";const r=await db.from("bizpay_profiles").update({full_name:n,kyc_status:"pending"}).eq("id",user.id);$("kycMsg").textContent=r.error?r.error.message:"KYC request submitted.";await loadData();showProfile()}
+function setAmount(n){$("redeemAmount").value=n}
+async function submitRedeem(){const a=Number($("redeemAmount").value),u=$("upi").value.trim();if(a<100)return $("redeemMsg").textContent="Minimum redeem amount is ₹100.";if(a>Number(wallet.balance||0))return $("redeemMsg").textContent="Amount exceeds available balance.";if(!u)return $("redeemMsg").textContent="Enter your UPI ID.";if(!db)return $("redeemMsg").textContent="Supabase publishable key is not configured.";const r=await db.from("bizpay_redeem_requests").insert({user_id:user.id,amount:a,upi_id:u,status:"pending"});if(r.error)return $("redeemMsg").textContent=r.error.message;go("success")}
+async function logout(){if(db)await db.auth.signOut();location.reload()}
+init();
+</script></body></html>
