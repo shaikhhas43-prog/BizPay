@@ -204,14 +204,14 @@ input:focus{border-color:#74aef4;box-shadow:0 0 0 3px rgba(11,114,231,.09)}
 <section id="kycPage" class="screen hidden">
   <div class="pageHead"><button class="back" onclick="openScreen('homePage')">←</button><div><h2>KYC Verification</h2><p>Submit the prototype verification request</p></div></div>
   <div class="form">
-    <div class="security"><div>🛡️</div><div><b>Prototype KYC flow</b><small>This demo does not store PAN/DOB or identity documents in the browser. Do not enter real sensitive documents here.</small></div></div>
+    <div class="security"><div>🛡️</div><div><b>Prototype KYC flow</b><small>KYC record stores your name, DOB and only PAN's last 4 characters. Full PAN/document images are not stored by this prototype.</small></div></div>
     <label>Full Name</label><input id="kycFullName" placeholder="Full legal name">
     <label>Date of Birth</label><input id="kycDob" type="date">
     <label>PAN Format</label><input id="kycPan" maxlength="10" placeholder="ABCDE1234F" style="text-transform:uppercase">
     <label>UPI ID (prototype field)</label><input id="kycUpi" placeholder="example@upi">
     <button class="primary" onclick="submitKyc()">Submit for Verification</button>
     <div id="kycMsg" class="msg"></div>
-    <div class="note">This is a prototype workflow only, not official KYC or identity verification.</div>
+    <div class="note">Prototype KYC workflow only. Full PAN/document images are not stored.</div>
   </div>
 </section>
 
@@ -435,11 +435,31 @@ async function submitKyc(){
   const upi=$("kycUpi").value.trim();
   if(!name||!dob||!pan||!upi)return msg("kycMsg","Saari details bharo.");
   if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan))return msg("kycMsg","PAN format check karo.");
-  const {error}=await db.from("bizpay_profiles").update({full_name:name,kyc_status:"submitted"}).eq("id",currentUser.id);
-  if(error)return msg("kycMsg",error.message);
+
+  // Privacy-minimal storage: store DOB and only PAN's last 4 characters.
+  // Never persist the full PAN in this browser app.
+  const panLast4=pan.slice(-4);
+
+  const {error: kycError}=await db.from("bizpay_kyc_submissions").upsert({
+    user_id:currentUser.id,
+    full_name:name,
+    dob:dob,
+    pan_last4:panLast4,
+    status:"submitted"
+  },{onConflict:"user_id"});
+
+  if(kycError)return msg("kycMsg",kycError.message);
+
+  const {error: profileError}=await db.from("bizpay_profiles")
+    .update({full_name:name,kyc_status:"submitted"})
+    .eq("id",currentUser.id);
+
+  if(profileError)return msg("kycMsg",profileError.message);
+
   profile={...(profile||{}),full_name:name,kyc_status:"submitted"};
   $("kycPan").value="";$("kycDob").value="";$("kycUpi").value="";
-  updateUI();msg("kycMsg","Verification request submit ho gayi. Status: Submitted",true);
+  updateUI();
+  msg("kycMsg","KYC details securely submitted. Full PAN save nahi hua; sirf last 4 save hue.",true);
 }
 
 async function requestRedeem(){
