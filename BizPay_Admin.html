@@ -16,7 +16,7 @@
 <script>
 const SUPABASE_URL="https://ytdruccperzivynpfqgp.supabase.co";
 const SUPABASE_KEY="PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
-const db=SUPABASE_KEY.startsWith("PASTE_")?null:supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const db=const SUPABASE_KEY=	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0ZHJ1Y2NwZXJ6aXZ5bnBmcWdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2Mjg0MTIsImV4cCI6MjEwNDIwNDQxMn0.bALhS5CIg3aQFp8h6FE1nejWhZB7fXtNgNRz8iP87as;
 const $=id=>document.getElementById(id);
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 async function adminLogin(){const e=$("email").value.trim(),p=$("password").value;if(!db)return $("msg").textContent="Supabase publishable key is not configured.";const r=await db.auth.signInWithPassword({email:e,password:p});if(r.error)return $("msg").textContent=r.error.message;const u=r.data.user;const q=await db.from("bizpay_profiles").select("role,full_name").eq("id",u.id).maybeSingle();if(q.error||q.data?.role!=="admin"){await db.auth.signOut();return $("msg").textContent="Admin access denied. Set this account role to admin."}$("login").classList.add("hide");$("panel").classList.remove("hide");loadAll()}
