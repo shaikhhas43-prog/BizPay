@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BizPay Admin</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1478e8">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--blue:#1478f2;--blue2:#0d63d8;--bg:#f4f8ff;--text:#17243b;--muted:#718096;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Inter,Arial,sans-serif;color:var(--text)}
+.app{width:100%;max-width:1100px;margin:auto;min-height:100vh;background:var(--bg)}
+.top{background:linear-gradient(135deg,#0d78f5,#1265dc);color:#fff;padding:28px 24px 25px;border-radius:0 0 34px 34px;box-shadow:0 12px 32px #1265dc30}
+.brand{font-size:30px;font-weight:800;letter-spacing:-.5px}.sub{font-size:14px;color:#dcecff;margin-top:5px}
+.card,.section{margin:16px 18px;background:#fff;border-radius:24px;padding:20px;box-shadow:0 8px 28px #1f5fae12}
+.hidden{display:none!important}
+input,select{width:100%;padding:14px 15px;border:1px solid #dbe5f2;border-radius:14px;font-size:15px;outline:none;background:#fff}
+input:focus,select:focus{border-color:#2580ed;box-shadow:0 0 0 3px #2580ed16}
+button{border:0;border-radius:14px;padding:13px 16px;font-weight:700;font-size:14px;cursor:pointer}
+.primary{background:var(--blue);color:#fff}.secondary{background:#eaf3ff;color:#14569d}.success{background:#e9f9f0;color:#078348}.danger{background:#ffe9e9;color:#b42318}
+.msg{min-height:18px;margin-top:10px}.ok{color:#087f45}.err{color:#c62828}.muted{color:var(--muted)}.small{font-size:12px}
+.hero{margin:16px 18px;background:linear-gradient(135deg,#0878f9,#1264d8);color:#fff;border-radius:24px;padding:22px;box-shadow:0 12px 30px #1264d833}
+.hero .welcome{font-size:14px;opacity:.9}.hero .name{font-size:27px;font-weight:800;margin-top:4px}
+.hero .adminpill{display:inline-block;background:#ffffff25;border:1px solid #ffffff35;padding:7px 12px;border-radius:999px;margin-bottom:18px;font-weight:700}
+.profileRow{display:flex;justify-content:space-between;align-items:center;gap:15px}
+.avatar{width:42px;height:42px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:800}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 18px}
+.metric{background:#fff;border-radius:20px;padding:15px;box-shadow:0 8px 24px #1f5fae10;border:1px solid #edf2f8}
+.metric .ico{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:#eaf3ff;font-size:21px;margin-bottom:9px}
+.metric:nth-child(2) .ico{background:#e9f9f0}.metric:nth-child(3) .ico{background:#fff5dc}.metric:nth-child(4) .ico{background:#f0ebff}
+.metric .label{font-size:13px;color:#52627a}.metric .num{font-size:25px;font-weight:800;margin-top:5px}
+.quickgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.quick{background:#fff;border:1px solid #e7eef8;border-radius:18px;padding:16px;text-align:center;box-shadow:0 7px 20px #1f5fae0c;cursor:pointer}
+.quick .qico{width:42px;height:42px;border-radius:14px;background:#eaf3ff;display:grid;place-items:center;margin:0 auto 8px;font-size:20px}
+.item{border:1px solid #e0e8f3;border-radius:17px;padding:15px;margin:10px 0;background:#fff}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff3ce;color:#916700;font-size:12px;font-weight:700}
+.txToolbar{display:flex;gap:10px;align-items:center}.txToolbar input{flex:1}
+.filterbar{display:flex;gap:8px;overflow:auto;margin:10px 0}.filter{background:#edf4fd;color:#344764;white-space:nowrap}.filter.active{background:var(--blue);color:#fff}
+.txrow{display:flex;align-items:center;justify-content:space-between;gap:15px;border:1px solid #e0e8f3;border-radius:17px;padding:14px;margin:10px 0}
+.txleft{display:flex;gap:12px;align-items:center;min-width:0}.txicon{width:44px;height:44px;border-radius:50%;background:#e9f9f0;display:grid;place-items:center;font-size:20px;flex:0 0 auto}.txicon.debit{background:#ffeaea}
+.txdesc{font-weight:800}.txmeta{font-size:12px;color:#718096;margin-top:3px}.txamount{font-weight:800;white-space:nowrap}.credit{color:#078348}.debit{color:#d62828}
+.bottom{position:sticky;bottom:0;z-index:5;background:#fff;border-top:1px solid #e6edf6;display:grid;grid-template-columns:repeat(5,1fr);padding:9px 7px calc(9px + env(safe-area-inset-bottom));box-shadow:0 -8px 25px #17365b10}
+.bottom a{text-decoration:none;color:#7c899d;text-align:center;font-size:10px;font-weight:700;padding:6px;border-radius:16px;cursor:pointer}.bottom a.active{color:var(--blue);background:#eaf3ff}.bottom .bi{display:block;font-size:19px;margin-bottom:3px}
+.note{background:#eef6ff;border-radius:15px;padding:13px;color:#4b6380;font-size:12px;line-height:1.5}
+@media(min-width:800px){.app{max-width:1200px}.top{border-radius:0 0 38px 38px;padding:30px 40px}.hero,.section,.card{margin-left:40px;margin-right:40px}.metrics{margin-left:40px;margin-right:40px}.bottom{border-radius:20px 20px 0 0}.quickgrid{grid-template-columns:repeat(3,220px)}}
+@media(max-width:700px){.metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.metric{padding:10px 8px;border-radius:18px}.metric .ico{width:34px;height:34px;font-size:17px;margin-bottom:6px}.metric .label{font-size:10px;line-height:1.2}.metric .num{font-size:20px}.txToolbar{align-items:stretch}.txToolbar{flex-direction:column}.txToolbar button{width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div id="loginPage">
+  <div class="top"><div class="brand">BizPay</div><div class="sub">Admin Control Center</div></div>
+  <div class="card">
+    <h2>Admin Login</h2>
+    <p class="muted">Only an authorised BizPay admin account can enter this panel.</p>
+    <input id="email" type="email" placeholder="Admin email">
+    <input id="password" type="password" placeholder="Password">
+    <button class="primary" onclick="adminLogin()">Login</button>
+    <div style="text-align:center;margin-top:12px">
+      <span onclick="showAdminReset()" style="cursor:pointer">Forgot password?</span>
+    </div>
+    <div id="loginMsg" class="msg"></div>
+    <p class="small muted">Admin access is checked against the server-side profile role.</p>
+  </div>
+</div>
+
+
+<div id="resetPage" class="hidden">
+  <div class="top">
+    <div class="brand">BizPay</div>
+    <div class="sub">Reset Password</div>
+  </div>
+  <div class="card">
+    <button class="secondary" onclick="show('loginPage')">← Back to Login</button>
+    <h2>Forgot Password?</h2>
+    <p class="muted">Admin account ka registered email enter karo.</p>
+    <input id="resetEmail" type="email" placeholder="Admin email">
+    <button class="primary" onclick="sendAdminReset()">Send Reset Link</button>
+    <div id="resetMsg" class="msg"></div>
+  </div>
+</div>
+
+
+<div id="updatePasswordPage" class="hidden">
+  <div class="top">
+    <div class="brand">BizPay</div>
+    <div class="sub">Set New Password</div>
+  </div>
+  <div class="card">
+    <h2>New Password</h2>
+    <input id="newPassword" type="password" placeholder="New Password (6+ characters)">
+    <input id="confirmPassword" type="password" placeholder="Confirm New Password">
+    <button class="primary" onclick="updateAdminPassword()">Update Password</button>
+    <div id="updateMsg" class="msg"></div>
+  </div>
+</div>
+
+<div id="panelPage" class="hidden">
+  <div class="top" style="padding:26px 24px 24px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div class="brand">BizPay <span style="font-size:12px;vertical-align:middle;background:#ffffff28;padding:7px 10px;border-radius:999px">Admin</span></div>
+        <div class="sub">Admin Control Center</div>
+      </div>
+      <button class="secondary" style="width:48px;height:48px;padding:0;background:#ffffff22;color:#fff;border:1px solid #ffffff35;font-size:20px" onclick="logout()">⇥</button>
+    </div>
+    <div style="margin-top:22px">
+      <div style="font-size:14px;color:#dcecff">Welcome back,</div>
+      <div id="adminName" style="font-size:30px;font-weight:800;margin-top:3px">Admin</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:-10px">
+      <div class="avatar" id="adminAvatar">A</div>
+      <div id="heroEmail" class="small" style="color:#fff"></div>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="ico">👥</div><div class="label">Users</div><div class="num" id="usersCount">0</div></div>
+    <div class="metric"><div class="ico">🛡️</div><div class="label">KYC Requests</div><div class="num" id="kycCount">0</div></div>
+    <div class="metric"><div class="ico">₹</div><div class="label">Redeem Requests</div><div class="num" id="redeemCount">0</div></div>
+    <div class="metric"><div class="ico">▤</div><div class="label">Transactions</div><div class="num" id="txCount">0</div></div>
+  </div>
+
+  <div class="section" id="txSection" style="margin-top:16px">
+    <div class="txToolbar">
+      <div style="flex:1">
+        <h2 style="margin:0">▤ Transactions</h2>
+        <div class="muted small">Admin wallet ledger</div>
+      </div>
+      <button class="secondary" onclick="loadTransactions()">↻ Refresh</button>
+    </div>
+
+    <input id="txSearch" placeholder="🔎 Search user ID or description..." oninput="renderTransactions()">
+
+    <div class="filterbar">
+      <button class="filter active" data-filter="all" onclick="setTxFilter('all',this)">All</button>
+      <button class="filter" data-filter="credit" onclick="setTxFilter('credit',this)">Credit</button>
+      <button class="filter" data-filter="debit" onclick="setTxFilter('debit',this)">Debit</button>
+      <button class="filter" data-filter="kyc" onclick="setTxFilter('kyc',this)">KYC</button>
+      <button class="filter" data-filter="redeem" onclick="setTxFilter('redeem',this)">Redeem</button>
+    </div>
+
+    <div id="txMsg" class="msg"></div>
+    <div id="txList"><p class="muted">Loading...</p></div>
+    <div class="note">Read-only prototype ledger. No real bank/UPI transfer is initiated here.</div>
+  </div>
+
+  <div class="section" id="usersSection">
+  <div class="txToolbar">
+    <div style="flex:1">
+      <h2 style="margin:0">👥 Users</h2>
+      <div class="muted small">BizPay user overview</div>
+    </div>
+    <button class="secondary" onclick="loadUsers()">↻ Refresh</button>
+  </div>
+  <input id="userSearch" placeholder="🔎 Search user ID or name..." oninput="renderUsers()">
+  <div id="usersMsg" class="msg"></div>
+  <div id="usersList"><p class="muted">Loading...</p></div>
+</div>
+
+
+<div class="section" id="addBalanceSection">
+  <div class="txToolbar">
+    <div style="flex:1">
+      <h2 style="margin:0">➕ Add Test Balance</h2>
+      <div class="muted small">Prototype wallet only — no real bank/UPI money is sent.</div>
+    </div>
+  </div>
+  <div class="note" style="margin:12px 0">Use this only for testing the BizPay wallet. This adds an in-app test credit and records it in the prototype ledger.</div>
+  <input id="addUserId" placeholder="User UUID">
+  <input id="addAmount" type="number" min="0.01" step="0.01" placeholder="Amount (₹)" style="margin-top:10px">
+  <button class="primary" style="margin-top:10px;width:100%" onclick="addTestBalance()">Add Test Balance</button>
+  <div id="addBalanceMsg" class="msg"></div>
+</div>
+
+<div class="section" id="kycSection">
+    <div class="txToolbar">
+      <div style="flex:1"><h2 style="margin:0">🪪 KYC Requests</h2><div class="muted small">Review submitted KYC requests</div></div>
+      <button class="secondary" onclick="loadKyc()">↻ Refresh</button>
+    </div>
+    <div id="kycMsg" class="msg"></div>
+    <div id="kycList"><p class="muted">Loading...</p></div>
+  </div>
+
+  <div class="section" id="redeemSection">
+    <div class="txToolbar">
+      <div style="flex:1"><h2 style="margin:0">💸 Redeem Requests</h2><div class="muted small">Review wallet redeem requests</div></div>
+      <button class="secondary" onclick="loadRedeems()">↻ Refresh</button>
+    </div>
+    <div id="redeemMsg" class="msg"></div>
+    <div id="redeemList"><p class="muted">Loading...</p></div>
+  </div>
+
+  <nav class="bottom">
+    <a class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bi">⌂</span>Dashboard</a>
+    <a onclick="document.getElementById('usersSection').scrollIntoView({behavior:'smooth'})"><span class="bi">👥</span>Users</a>
+    <a onclick="document.getElementById('kycSection').scrollIntoView({behavior:'smooth'})"><span class="bi">🛡</span>KYC</a>
+    <a onclick="document.getElementById('addBalanceSection').scrollIntoView({behavior:'smooth'})"><span class="bi">＋</span>Add Test</a>
+    <a onclick="document.getElementById('redeemSection').scrollIntoView({behavior:'smooth'})"><span class="bi">₹</span>Redeem</a>
+    <a onclick="document.getElementById('txSection').scrollIntoView({behavior:'smooth'})"><span class="bi">▤</span>Transactions</a>
+  </nav>
+</div>
+
+<script>
+const SUPABASE_URL="https://ytdruccperzivynpfqgp.supabase.co";
+const SUPABASE_KEY="sb_publishable_2efp1gcKWJ4juqLfEz-ZkQ_v2x3JOkB";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null;
+let txRows=[];
+let txFilter='all';
+
+function msg(id,text,ok=false){
+  const e=document.getElementById(id);
+  e.textContent=text;
+  e.className="msg "+(ok?"ok":"err");
+}
+function show(id){
+  document.getElementById("loginPage").classList.toggle("hidden",id!=="loginPage");
+  document.getElementById("resetPage").classList.toggle("hidden",id!=="resetPage");
+  document.getElementById("updatePasswordPage").classList.toggle("hidden",id!=="updatePasswordPage");
+  document.getElementById("panelPage").classList.toggle("hidden",id!=="panelPage");
+}
+
+
+function showAdminReset(){
+  document.getElementById("resetEmail").value=document.getElementById("email").value.trim();
+  document.getElementById("resetMsg").textContent="";
+  show("resetPage");
+}
+
+async function sendAdminReset(){
+  const email=document.getElementById("resetEmail").value.trim();
+  if(!email)return msg("resetMsg","Admin email bharo.");
+  const btn=document.querySelector('#resetPage button.primary');
+  if(btn)btn.disabled=true;
+  try{
+    const redirectTo=window.location.origin+window.location.pathname;
+    const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
+    if(error)throw error;
+    msg("resetMsg","Reset link email par bhej diya gaya. Inbox/Spam bhi check karo.",true);
+  }catch(e){
+    msg("resetMsg",e.message||"Reset email send nahi hua.");
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+
+async function adminLogin(){
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  if(!email||!password)return msg("loginMsg","Email aur password bharo.");
+  try{
+    const {data,error}=await db.auth.signInWithPassword({email,password});
+    if(error)throw error;
+    currentUser=data.user;
+
+    const {data:profile,error:pe}=await db
+      .from("bizpay_profiles").select("role,full_name").eq("id",currentUser.id).maybeSingle();
+    if(pe)throw pe;
+
+    if(profile?.role!=="admin"){
+      await db.auth.signOut();
+      currentUser=null;
+      return msg("loginMsg","Admin access denied. Is account ka admin role nahi hai.");
+    }
+
+    if(document.getElementById("adminEmail")) document.getElementById("adminEmail").textContent=currentUser.email||"";
+    document.getElementById("heroEmail").textContent=currentUser.email||"";
+    document.getElementById("adminName").textContent=profile?.full_name||"Admin";
+    document.getElementById("adminAvatar").textContent=(profile?.full_name||"A").trim().charAt(0).toUpperCase();
+    show("panelPage");
+    await refreshAll();
+  }catch(e){
+    msg("loginMsg",e.message||"Admin login failed.");
+  }
+}
+
+let userRows=[];
+
+async function loadUsers(){
+  const box=document.getElementById("usersList");
+  box.innerHTML="<p class='muted'>Loading...</p>";
+  try{
+    const [k,r] = await Promise.all([
+      db.rpc("bizpay_admin_list_kyc"),
+      db.rpc("bizpay_admin_list_redeems")
+    ]);
+    if(k.error) throw k.error;
+    if(r.error) throw r.error;
+
+    const map=new Map();
+
+    (k.data||[]).forEach(x=>{
+      const id=x.user_id||x.id;
+      if(!id)return;
+      const old=map.get(id)||{user_id:id};
+      map.set(id,{...old,
+        full_name:x.full_name||x.name||old.full_name||"BizPay User",
+        kyc_status:x.kyc_status||x.status||old.kyc_status||"pending"
+      });
+    });
+
+    (r.data||[]).forEach(x=>{
+      const id=x.user_id;
+      if(!id)return;
+      const old=map.get(id)||{user_id:id};
+      map.set(id,{...old, redeem_status:x.status||old.redeem_status});
+    });
+
+    (txRows||[]).forEach(x=>{
+      const id=x.user_id;
+      if(!id)return;
+      const old=map.get(id)||{user_id:id};
+      map.set(id,{...old});
+    });
+
+    userRows=Array.from(map.values());
+    document.getElementById("usersCount").textContent=userRows.length||0;
+    renderUsers();
+  }catch(e){
+    box.innerHTML="";
+    msg("usersMsg",e.message||"Users load nahi hue.");
+  }
+}
+
+function renderUsers(){
+  const box=document.getElementById("usersList");
+  const q=(document.getElementById("userSearch")?.value||"").toLowerCase().trim();
+  const rows=userRows.filter(x=>
+    !q || String(x.user_id||"").toLowerCase().includes(q) ||
+    String(x.full_name||"").toLowerCase().includes(q)
+  );
+  if(!rows.length){box.innerHTML="<p class='muted'>No users found.</p>";return;}
+
+  box.innerHTML=rows.map(x=>{
+    const initials=(x.full_name||"U").trim().charAt(0).toUpperCase();
+    const kyc=x.kyc_status||"—";
+    const redeem=x.redeem_status||"—";
+    return `<div class="item">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="avatar" style="background:#eaf3ff;color:#1261d6">${esc(initials)}</div>
+        <div style="flex:1;min-width:0">
+          <b>${esc(x.full_name||"BizPay User")}</b>
+          <div class="small muted" style="word-break:break-all">${esc(x.user_id)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <span class="badge">KYC: ${esc(kyc)}</span>
+        <span class="badge">Redeem: ${esc(redeem)}</span>
+      </div>
+      <button class="secondary" style="margin-top:12px;width:100%" onclick="openAddBalance('${escAttr(x.user_id)}','${escAttr(x.full_name||"BizPay User")}')">➕ Add Test Balance</button>
+    </div>`;
+  }).join("");
+}
+
+function openAddBalance(userId, name){
+  document.getElementById("addUserId").value=userId||"";
+  document.getElementById("addAmount").value="";
+  document.getElementById("addBalanceMsg").textContent=name?"Selected: "+name:"";
+  document.getElementById("addBalanceSection").scrollIntoView({behavior:"smooth"});
+}
+
+async function addTestBalance(){
+  const userId=document.getElementById("addUserId").value.trim();
+  const amount=Number(document.getElementById("addAmount").value);
+  if(!userId)return msg("addBalanceMsg","User UUID bharo.");
+  if(!Number.isFinite(amount)||amount<=0)return msg("addBalanceMsg","Valid amount bharo.");
+  if(amount>100000)return msg("addBalanceMsg","Test amount ₹1,00,000 se zyada nahi ho sakta.");
+  if(!confirm("₹"+amount.toFixed(2)+" test balance add karna hai? Ye real bank/UPI transfer nahi hai."))return;
+  try{
+    const {data,error}=await db.rpc("bizpay_admin_add_test_balance",{p_user_id:userId,p_amount:amount});
+    if(error)throw error;
+    msg("addBalanceMsg","Test balance add ho gaya. New balance: ₹"+Number(data||0).toFixed(2),true);
+    await loadTransactions();
+    await loadUsers();
+  }catch(e){
+    msg("addBalanceMsg",e.message||"Test balance add nahi hua.");
+  }
+}
+
+async function loadTransactions(){
+  const box=document.getElementById("txList");
+  box.innerHTML="<p class='muted'>Loading...</p>";
+  try{
+    const {data,error}=await db.rpc("bizpay_admin_list_transactions");
+    if(error)throw error;
+    txRows=data||[];
+    document.getElementById("txCount").textContent=txRows.length;
+    const users=new Set(txRows.map(x=>x.user_id).filter(Boolean));
+    document.getElementById("usersCount").textContent=Math.max(users.size,1);
+    renderTransactions();
+  }catch(e){
+    box.innerHTML="";
+    msg("txMsg",e.message||"Transactions load nahi hui.");
+  }
+}
+function setTxFilter(filter,el){
+  txFilter=filter;
+  document.querySelectorAll(".filter").forEach(x=>x.classList.remove("active"));
+  if(el)el.classList.add("active");
+  renderTransactions();
+}
+function renderTransactions(){
+  const box=document.getElementById("txList");
+  const q=(document.getElementById("txSearch")?.value||"").toLowerCase().trim();
+  let rows=txRows.filter(x=>{
+    const type=String(x.transaction_type||"").toLowerCase();
+    const debit=["redeem","debit","withdraw"].includes(type);
+    const matchFilter=txFilter==="all" ||
+      (txFilter==="credit" && !debit) ||
+      (txFilter==="debit" && debit) ||
+      (txFilter==="redeem" && type==="redeem") ||
+      (txFilter==="kyc" && (type==="kyc" || String(x.description||"").toLowerCase().includes("kyc")));
+    const hay=(String(x.user_id||"")+" "+String(x.description||"")+" "+type).toLowerCase();
+    return matchFilter && (!q || hay.includes(q));
+  });
+  if(!rows.length){box.innerHTML="<p class='muted'>No transactions found.</p>";return;}
+  box.innerHTML=rows.map(x=>{
+    const type=String(x.transaction_type||"").toLowerCase();
+    const debit=["redeem","debit","withdraw"].includes(type);
+    const amount=(debit?"−":"+")+"₹"+Number(x.amount||0).toFixed(2);
+    const icon=debit?"↓":"＋";
+    const status=String(x.status||"");
+    const statusClass=status==="completed"?"success":"secondary";
+    return `<div class="txrow">
+      <div class="txleft"><div class="txicon ${debit?"debit":""}">${icon}</div>
+      <div style="min-width:0"><div class="txdesc">${esc(x.description||type||"Transaction")}</div>
+      <div class="txmeta">User: ${esc(x.user_id||"")}</div>
+      <div class="txmeta">${new Date(x.created_at).toLocaleString()}</div></div></div>
+      <div style="text-align:right"><div class="txamount ${debit?"debit":"credit"}">${amount}</div>
+      <span class="badge ${statusClass}" style="margin-top:7px">${esc(status||"")}</span></div>
+    </div>`;
+  }).join("");
+}
+async function refreshAll(){
+  await Promise.all([loadKyc(),loadRedeems(),loadTransactions()]);
+  await loadUsers();
+}
+
+async function loadKyc(){
+  const box=document.getElementById("kycList");
+  box.innerHTML="<p class='muted'>Loading...</p>";
+  try{
+    const {data,error}=await db.rpc("bizpay_admin_list_kyc");
+    if(error)throw error;
+    const rows=data||[];
+    document.getElementById("kycCount").textContent=rows.filter(x=>["submitted","pending"].includes(x.kyc_status)).length;
+    if(!rows.length){box.innerHTML="<p class='muted'>No KYC requests.</p>";return;}
+    box.innerHTML=rows.map(x=>`
+      <div class="item">
+        <b>${esc(x.full_name||"Unnamed")}</b>
+        <div class="small muted">User ID: ${esc(x.user_id||"")}</div>
+        <p>Status: <span class="badge">${esc(x.kyc_status||"pending")}</span></p>
+        ${x.kyc_status==="submitted"?`
+        <div class="row">
+          <button class="success" onclick="reviewKyc('${escAttr(x.user_id)}','approved')">Approve</button>
+          <button class="danger" onclick="reviewKyc('${escAttr(x.user_id)}','rejected')">Reject</button>
+        </div>`:""}
+      </div>`).join("");
+  }catch(e){
+    box.innerHTML="";
+    msg("kycMsg",e.message||"KYC requests load nahi hui.");
+  }
+}
+
+async function reviewKyc(userId,status){
+  if(!confirm(status==="approved"?"KYC approve karna hai?":"KYC reject karna hai?"))return;
+  try{
+    const {error}=await db.rpc("bizpay_admin_review_kyc",{p_user_id:userId,p_status:status});
+    if(error)throw error;
+    msg("kycMsg","KYC "+status+" ho gayi.",true);
+    await refreshAll();
+  }catch(e){msg("kycMsg",e.message||"KYC review failed.");}
+}
+
+async function loadRedeems(){
+  const box=document.getElementById("redeemList");
+  box.innerHTML="<p class='muted'>Loading...</p>";
+  try{
+    const {data,error}=await db.rpc("bizpay_admin_list_redeems");
+    if(error)throw error;
+    const rows=data||[];
+    document.getElementById("redeemCount").textContent=rows.filter(x=>x.status==="pending").length;
+    if(!rows.length){box.innerHTML="<p class='muted'>No redeem requests.</p>";return;}
+    box.innerHTML=rows.map(x=>`
+      <div class="item">
+        <b>₹${Number(x.amount||0).toFixed(2)}</b>
+        <div class="small muted">User: ${esc(x.user_id||"")}</div>
+        <div class="small muted">Payout ID: ${esc(x.upi_id||"-")}</div>
+        <p>Status: <span class="badge">${esc(x.status||"pending")}</span></p>
+        ${x.status==="pending"?`
+        <div class="row">
+          <button class="success" onclick="reviewRedeem('${escAttr(x.id)}','approved')">Approve</button>
+          <button class="danger" onclick="reviewRedeem('${escAttr(x.id)}','rejected')">Reject</button>
+        </div>`:""}
+      </div>`).join("");
+  }catch(e){
+    box.innerHTML="";
+    msg("redeemMsg",e.message||"Redeem requests load nahi hui.");
+  }
+}
+
+async function reviewRedeem(id,status){
+  if(!confirm(status==="approved"?"Redeem approve karna hai?":"Redeem reject karna hai?"))return;
+  try{
+    const {error}=await db.rpc("bizpay_admin_review_redeem",{p_request_id:id,p_status:status});
+    if(error)throw error;
+    msg("redeemMsg","Redeem "+status+" ho gaya.",true);
+    await refreshAll();
+  }catch(e){msg("redeemMsg",e.message||"Redeem review failed.");}
+}
+
+function esc(v){
+  return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function escAttr(v){return String(v).replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
+
+
+async function updateAdminPassword(){
+  const p=document.getElementById("newPassword").value;
+  const c=document.getElementById("confirmPassword").value;
+  if(!p||!c)return msg("updateMsg","Dono password fields bharo.");
+  if(p.length<6)return msg("updateMsg","Password kam se kam 6 characters ka rakho.");
+  if(p!==c)return msg("updateMsg","Dono passwords same hone chahiye.");
+  try{
+    const {error}=await db.auth.updateUser({password:p});
+    if(error)throw error;
+    msg("updateMsg","Password successfully update ho gaya. Ab Admin Login karo.",true);
+    setTimeout(async()=>{await db.auth.signOut();show("loginPage");},1200);
+  }catch(e){msg("updateMsg",e.message||"Password update nahi hua.");}
+}
+
+db.auth.onAuthStateChange((event)=>{
+  if(event==="PASSWORD_RECOVERY") show("updatePasswordPage");
+});
+
+async function logout(){
+  await db.auth.signOut();
+  currentUser=null;
+  show("loginPage");
+}
+</script>
+</body>
+</html>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
