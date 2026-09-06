@@ -72,8 +72,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL="https://ytdruccperzivynpfqgp.supabase.co";
-const SUPABASE_KEY="PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
-const db=const SUPABASE_KEY=	eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0ZHJ1Y2NwZXJ6aXZ5bnBmcWdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2Mjg0MTIsImV4cCI6MjEwNDIwNDQxMn0.bALhS5CIg3aQFp8h6FE1nejWhZB7fXtNgNRz8iP87as
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0ZHJ1Y2NwZXJ6aXZ5bnBmcWdwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2Mjg0MTIsImV4cCI6MjEwNDIwNDQxMn0.bALhS5CIg3aQFp8h6FE1nejWhZB7fXtNgNRz8iP87as";
+const db=SUPABASE_KEY.startsWith("PASTE_")?null:supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let user=null,profile=null,wallet={balance:0};
 const $=id=>document.getElementById(id),money=n=>"₹"+Number(n||0).toLocaleString("en-IN");
 function toast(t){$("toast").textContent=t;$("toast").classList.remove("hide");setTimeout(()=>$("toast").classList.add("hide"),2300)}
