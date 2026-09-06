@@ -49,7 +49,11 @@
 <section id="kyc" class="screen hide"><div class="page"><div class="ph"><button class="back" onclick="go('home')">←</button><h2>KYC Verification</h2></div>
 <div class="card" style="text-align:center"><div style="font-size:48px">🛡️</div><h3>Complete Your KYC</h3><p style="font-size:12px;color:var(--muted)">Verification status is managed by the BizPay admin.</p></div>
 <div class="card"><div class="item"><b>Identity Details</b><small>Basic profile information</small></div><div class="item"><b>PAN Card</b><small>Secure verification step</small></div><div class="item"><b>Selfie</b><small>Identity verification step</small></div><div class="item"><b>Bank / UPI Details</b><small>Required for an authorised payout provider</small></div></div>
-<div class="field"><label>Full Name</label><input id="kycName" placeholder="Full name"></div><button class="btn" onclick="submitKyc()">Submit for Verification</button><div id="kycMsg" class="msg"></div></div></section>
+<div class="field"><label>Full Name</label><input id="kycName" placeholder="Full name" autocomplete="name"></div>
+<div class="field"><label>Date of Birth</label><input id="kycDob" type="date" autocomplete="bday"></div>
+<div class="field"><label>PAN Number</label><input id="kycPan" type="text" maxlength="10" placeholder="ABCDE1234F" autocomplete="off" style="text-transform:uppercase"></div>
+<div class="note">For this prototype, do not enter or upload real PAN/Aadhaar documents. These fields are only for testing the KYC form flow.</div>
+<button class="btn" onclick="submitKyc()">Submit for Verification</button><div id="kycMsg" class="msg"></div></div></section>
 
 <section id="redeem" class="screen hide"><div class="page"><div class="ph"><button class="back" onclick="go('home')">←</button><h2>Redeem</h2></div>
 <div class="card"><small>Available Balance</small><div style="font-size:28px;font-weight:900;margin-top:4px" id="redeemBalance">₹0</div></div>
@@ -89,7 +93,16 @@ async function resetPassword(){if(!db)return $("authMsg").textContent="Supabase 
 async function loadHome(){$("balance").textContent=money(wallet.balance);if(!db)return;const r=await db.from("bizpay_transactions").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(5);renderTx(r.data||[],$("recent"))}
 async function loadTransactions(){if(!db)return $("txList").innerHTML='<div class="card" style="color:var(--muted)">Connect Supabase to load transactions.</div>';const r=await db.from("bizpay_transactions").select("*").eq("user_id",user.id).order("created_at",{ascending:false});renderTx(r.data||[],$("txList"))}
 function showProfile(){$("profileName").textContent=profile?.full_name||"BizPay User";$("profileEmail").textContent=user?.email||"";const s=profile?.kyc_status||"pending";$("profileStatus").textContent=s==="approved"?"✓ Verified":"KYC Pending";$("kycStatus").textContent=s==="approved"?"Verified ›":"Pending ›"}
-async function submitKyc(){const n=$("kycName").value.trim();if(!n)return $("kycMsg").textContent="Enter your full name.";if(!db)return $("kycMsg").textContent="Supabase publishable key is not configured.";const r=await db.from("bizpay_profiles").update({full_name:n,kyc_status:"pending"}).eq("id",user.id);$("kycMsg").textContent=r.error?r.error.message:"KYC request submitted.";await loadData();showProfile()}
+async function submitKyc(){
+const n=$("kycName").value.trim(),d=$("kycDob").value,p=$("kycPan").value.trim().toUpperCase();
+if(!n)return $("kycMsg").textContent="Enter your full name.";
+if(!d)return $("kycMsg").textContent="Select your date of birth.";
+if(!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(p))return $("kycMsg").textContent="Enter a valid 10-character PAN format.";
+if(!db)return $("kycMsg").textContent="Supabase publishable key is not configured.";
+const r=await db.from("bizpay_profiles").update({full_name:n,kyc_status:"pending"}).eq("id",user.id);
+$("kycMsg").textContent=r.error?r.error.message:"KYC request submitted.";
+if(!r.error){$("kycDob").value="";$("kycPan").value="";await loadData();showProfile()}
+}
 function setAmount(n){$("redeemAmount").value=n}
 async function submitRedeem(){const a=Number($("redeemAmount").value),u=$("upi").value.trim();if(a<100)return $("redeemMsg").textContent="Minimum redeem amount is ₹100.";if(a>Number(wallet.balance||0))return $("redeemMsg").textContent="Amount exceeds available balance.";if(!u)return $("redeemMsg").textContent="Enter your UPI ID.";if(!db)return $("redeemMsg").textContent="Supabase publishable key is not configured.";const r=await db.from("bizpay_redeem_requests").insert({user_id:user.id,amount:a,upi_id:u,status:"pending"});if(r.error)return $("redeemMsg").textContent=r.error.message;go("success")}
 async function logout(){if(db)await db.auth.signOut();location.reload()}
